@@ -11,6 +11,7 @@ import { log } from "console";
 import csvtojson from "csvtojson";
 import CLI_WIDTH from "cli-width";
 import POWER from "child_process";
+import MINER from "./miner";
 
 // requiring modules
 const Bun = require("bun");
@@ -71,8 +72,9 @@ if (Teams.length == 0) {
   process.exit(0);
 }
 
+// loop for every Selected team
 for (let i = 0; i < Teams.length; i++) {
-  // loop for every team
+  // Fetch Their Teams Data
   const spinner = ora(
     COLORS.magenta("Fetching Data for : " + Teams[i])
   ).start();
@@ -91,7 +93,9 @@ for (let i = 0; i < Teams.length; i++) {
       COLORS.yellow(Data.length.toString())
   );
   TERMINATOR();
-  // await MINER(data, Func, Teams[i]); // actual Data Fetch
+  // calling Fetch for every Member
+  const MinedData = await MINER(Data, Func, Teams[i]); // actual Data Fetch
+  console.log(MinedData);
 }
 TERMINATOR();
 log(COLORS.green.bold("PROCESS COMPLETED"));

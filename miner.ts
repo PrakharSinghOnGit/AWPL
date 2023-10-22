@@ -3,7 +3,6 @@ import { PendingXHR } from "pending-xhr-puppeteer";
 import { Cluster } from "puppeteer-cluster";
 import PUPPETEER from "puppeteer-extra";
 import STEALTH_PLUGIN from "puppeteer-extra-plugin-stealth";
-import CHROMIUM from "chromium";
 import COLORS from "colors";
 import { log } from "console";
 
@@ -14,27 +13,18 @@ const Bun = require("bun");
 PUPPETEER.use(STEALTH_PLUGIN());
 const Setting = JSON.parse(await Bun.file("./Settings.json").text());
 
-async function MINER(DATA, FUNCTION, FILENAME) {
+async function MINER(DATA: string | any[], FUNCTION: any, FILENAME: any) {
+  return { DATA, FUNCTION, FILENAME };
   const cluster = await Cluster.launch({
     // browser Launch Properties
-    concurrency: Cluster.CONCURRENCY_CONTEXT,
-    workerCreationDelay: 10,
-    monitor: Setting.Miner.Debug ? false : false,
-    timeout: 60 * 1000,
-    retryLimit: 0,
-    retryDelay: 10,
+    concurrency: Cluster.CONCURRENCY_CONTEXT, // Incognito Pages gor each Worker
     maxConcurrency: Setting.Miner.Debug ? 1 : Setting.Miner.MaxConcurrency,
     puppeteer: PUPPETEER,
+    sameDomainDelay: Setting.Miner.SameDomainDelay,
     puppeteerOptions: {
-      headless: Setting.Miner.Debug ? false : false,
-      slowMo: Setting.Miner.Debug ? 0 : Setting.Miner.SlowMo,
+      headless: Setting.Miner.Debug ? false : "new",
       defaultViewport: null,
-      args: [
-        `--start-maximized`,
-        `--headless=new`,
-        `--auto-open-devtools-for-tabs`,
-        `--incognito`,
-      ],
+      args: [`--start-maximized`, `--auto-open-devtools-for-tabs`],
     },
   });
   cluster.on("taskerror", async (err, { name }) => {
