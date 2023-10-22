@@ -1,31 +1,25 @@
 {
   "name": "awpl",
-  "module": "index.ts",
-  "type": "module",
+  "description": "To install dependencies:",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PrakharSinghOnGit/AWPL.git"
+  },
+  "keywords": [
+    "Scrapper",
+    "Miner",
+    "Cluster",
+    "Worker"
+  ],
+  "author": "Prakhar Singh",
+  "license": "ISC",
   "scripts": {
-    "start": "bun run index.ts",
+    "start": "node index.js",
     "options": "open ./Settings.json"
   },
-  "devDependencies": {
-    "bun-types": "^1.0.7"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
-  },
   "dependencies": {
-    "@puppeteer/browsers": "1.8.0",
-    "axios": "^1.5.1",
-    "bun": "^1.0.7",
-    "chromium": "^3.0.3",
-    "cli-width": "^4.1.0",
-    "colors": "^1.4.0",
-    "csvtojson": "^2.0.10",
-    "enquirer": "^2.4.1",
-    "fs": "^0.0.1-security",
-    "ora": "^7.0.1",
-    "pending-xhr-puppeteer": "^2.3.3",
-    "puppeteer-cluster": "^0.23.0",
-    "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2"
+    "ora": "^7.0.1"
   }
 }

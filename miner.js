@@ -13,7 +13,7 @@ const Bun = require("bun");
 PUPPETEER.use(STEALTH_PLUGIN());
 const Setting = JSON.parse(await Bun.file("./Settings.json").text());
 
-async function MINER(DATA: string | any[], FUNCTION: any, FILENAME: any) {
+async function MINER(DATA, FUNCTION, FILENAME) {
   return { DATA, FUNCTION, FILENAME };
   const cluster = await Cluster.launch({
     // browser Launch Properties
