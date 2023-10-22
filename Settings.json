@@ -1,0 +1,56 @@
+{
+    "print":{
+        "HeadingColor":"aliceblue",
+        "Font":"cascadia code",
+        "BackgroundColor":"#0d1117",
+        "PageZoom":1.1,
+        "DataPadding":"5px 15px",
+        "BorderWidth":"3px",
+        "BorderColor":"#30363d",
+        "EvenRowColor":"#18202b",
+        "FontSize":"22px",
+        "Column1Col":"#79c0ff",
+        "Column2Col":"#ff993f",
+        "Column3Col":"#d2a8ff",
+        "Column4Col":"#7ee778"
+    },
+    "Links":{
+        "#VINOD BISHT":"https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1zHtuH3TKakWGbcPoT-yysxKUivRtvde5CgDj_G3FoqrJNZ2-2vFqqTVN442SNQTqUwnRxY0qNp5b/pub?output=csv",
+        "#RAVINDRA SINGH":"https://docs.google.com/spreadsheets/d/e/2PACX-1vR5ofOUq75rxnttY0RC_6avzj0m0ZKrONksEnpwkEP0hBJbYF2Bb_z7lGWXL6y0b3mn8WtodLkd3mPp/pub?output=csv",
+        "#RAMESH SINGH":"https://docs.google.com/spreadsheets/d/e/2PACX-1vSF2vKeytCM5yC_YhujZ1mEMqUV9lWwGCxOH3ljZrzm8qEvWMt5qxfZhELTCVq6v3ZNwqJwscp2Ivr8/pub?output=csv",
+        "SD VYAS":"https://docs.google.com/spreadsheets/d/e/2PACX-1vRGFdSRIlxFt7M5tXdnFwrl3SIJhdxVYy0JOEIMwyIgKgtVeIKMzwoljtN1BBXge3b19GSkGcPpw5HE/pub?output=csv",
+        "HARISH CHAND":"https://docs.google.com/spreadsheets/d/e/2PACX-1vTr7qYan4TgdWb0goz0hGe_9-Kkd3WOkekgijGaOn0AJvEZf_FQJPNOcv6xmDIYmgg_2ftjLBOs6VQb/pub?output=csv",
+        "SUNIL PANT":"https://docs.google.com/spreadsheets/d/e/2PACX-1vRc8HJ4DVcYokApxcM1R4OTH73Q22dvzB5K5OxMfe5ebA5_8tvWfKJphqsEQ4ipI4_XBFSCjLBItSD-/pub?output=csv",
+        "RAJENDER VYAS":"https://docs.google.com/spreadsheets/d/e/2PACX-1vS78hqjzCg3vZuJjDXQwPdfJtPdeYtNPSXv35zw6WIJ1VmW_0xgu2875oBZuoyswgYkGESpmyPQbPqI/pub?output=csv",
+        "TOPAZ AND ABOVE":"https://docs.google.com/spreadsheets/d/e/2PACX-1vQ66JkdGhTgGf49NYmqhdsWUuS1-nKe_gZk-fnLbBozzKluahYmqNl6RGT6EXyRwZNEMwmjlFEa4-SD/pub?output=csv",
+        "#JAGAT SINGH":"https://docs.google.com/spreadsheets/d/e/2PACX-1vRgrGtd6xHxV4hSRpQsRYj06N_2JpYkRtsl0dK4tTrj8XGrC7juGgl67BBg75P4nQoKhYepexiKyQlg/pub?output=csv"
+    },
+    "Miner":{
+        "SlowMo": 0,
+        "Delay":5000,
+        "MaxConcurrency": 1,
+        "TargetURL": "https://www.asclepiuswellness.com/userpanel/UserMansoonJulyBonanzaNew.aspx",
+        "Debug" : true,
+        "Levels" : [
+            "FRESHER",
+            "BRONZE",
+            "SILVER",
+            "GOLD",
+            "PLATINUM",
+            "EMERALD",
+            "TOPAZ",
+            "RUBY STAR",
+            "SAPPHIRE",
+            "STAR SAPPHIRE",
+            "DIAMOND",
+            "BLUE DIAMOND",
+            "BLACK DIAMOND",
+            "ROYAL DIAMOND",
+            "CROWN DIAMOND",
+            "AMBASSADOR",
+            "ROYAL AMBASSADOR",
+            "CROWN AMBASSADOR",
+            "BRAND AMBASSADOR"
+        ]
+    }
+}
