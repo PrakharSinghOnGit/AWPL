@@ -112,13 +112,16 @@ const TeamsOPT = Object.keys(Setting.Links).filter(
 
 async function HandleData(Data, Team, Func) {
   // creating file name
-  const FILENAME = Team + "_" + Func;
+  const FILENAME = Team + " " + Func;
+  LEVELS.unshift("-");
   const sortedData = await Promise.all(
     LEVELS.map((level) => {
-      return unsorted.filter((item) => item.level === level);
+      return Data.filter((item) => item.level === level);
     })
   ).then((data) => {
-    return data.flat().reverse();
+    const sorted = data.flat().reverse();
+    const unsorted = Data.filter((item) => !item.level);
+    return sorted.concat(unsorted);
   });
   await PRINT(sortedData, FILENAME, Func == "CHEQUE DATA" ? "CD" : "SP");
 }
@@ -232,7 +235,11 @@ const PRINT = async function (DATA, FILENAME, TYPE = "SP") {
   const style = "@page { size: " +contentWidth+"px "+contentHeight+"px}; margin: 0; }"
   document.getElementById('style').innerHTML = document.getElementById('style').innerHTML + style
   </script>`;
-
+  // writing html file
+  FILE_SYSTEM.writeFileSync(
+    PATH.join(__dirname, "./archive/html/" + FILENAME + ".html"),
+    contentHtml
+  );
   // print pdf
   const command = `"${
     browser.path
@@ -240,9 +247,6 @@ const PRINT = async function (DATA, FILENAME, TYPE = "SP") {
     __dirname,
     "./out/",
     FILENAME + ".pdf"
-  )}" --no-margins "${PATH.join(
-    __dirname,
-    "./archive/html/" + FILENAME + ".html"
-  )}"`;
+  )}" --no-margins "${PATH.join(__dirname, "./html/" + FILENAME + ".html")}"`;
   POWER.execSync(command);
 };

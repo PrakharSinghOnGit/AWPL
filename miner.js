@@ -116,7 +116,9 @@ const LEVEL = async function (PAGE, NAME, ID) {
   );
   Load.update(ID, {
     text:
-      COLORS.yellow.bold(NAME) + " :" + COLORS.dim(" Opening Level Page : "),
+      COLORS.yellow.bold(NAME) +
+      " :" +
+      COLORS.dim.magenta(" Opening Level Page : "),
     spinnerColor: "yellow",
   });
   await PAGE.waitForNavigation({ waitUntil: "networkidle2" });
