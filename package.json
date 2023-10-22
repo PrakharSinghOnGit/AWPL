@@ -20,6 +20,16 @@
     "options": "open ./Settings.json"
   },
   "dependencies": {
-    "ora": "^7.0.1"
+    "axios": "^1.5.1",
+    "cli-width": "^4.1.0",
+    "colors": "^1.4.0",
+    "csvtojson": "^2.0.10",
+    "enquirer": "^2.4.1",
+    "fs": "^0.0.1-security",
+    "pending-xhr-puppeteer": "^2.3.3",
+    "puppeteer-cluster": "^0.23.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "spinnies": "^0.5.1"
   }
 }

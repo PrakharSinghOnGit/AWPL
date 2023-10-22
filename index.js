@@ -2,23 +2,24 @@
 console.time("Time Taken ");
 
 // importing modules
-const ora = require("ora");
 const PATH = require("path");
 const axios = require("axios");
 const COLORS = require("colors");
 const FILE_SYSTEM = require("fs");
-const { log } = "console";
+const { log } = require("console");
+const MINER = require("./miner.js");
+const Spinnies = require("spinnies");
 const csvtojson = require("csvtojson");
 const CLI_WIDTH = require("cli-width");
 const POWER = require("child_process");
-const MINER = require("./miner.js");
-const { MultiSelect, Confirm } = require("enquirer");
+const { MultiSelect, Confirm, Select } = require("enquirer");
 
 // assigning constants
+const Load = new Spinnies({
+  succeedPrefix: "✔",
+});
 const Setting = JSON.parse(FILE_SYSTEM.readFileSync("./Settings.json"));
 const TERMINATOR = () => log(COLORS.dim("=-".repeat(CLI_WIDTH() / 4)));
-const LEVELS = Setting.Miner.Levels;
-
 // Preload
 console.clear();
 TERMINATOR();
@@ -45,7 +46,7 @@ const TeamsOPT = Object.keys(Setting.Links).filter(
 
 (async () => {
   // Asking for which team to use
-  const Func = await new MultiSelect({
+  const Func = await new Select({
     name: "Func",
     initial: "LEVEL DATA",
     message: COLORS.yellow("Select Function ?"),
@@ -62,7 +63,6 @@ const TeamsOPT = Object.keys(Setting.Links).filter(
   // // asking for which team to use
   const Teams = await new MultiSelect({
     name: "Teams",
-    initial: TeamsOPT[0],
     message: COLORS.yellow("Select Teams ?"),
     choices: TeamsOPT,
   }).run();
@@ -75,27 +75,37 @@ const TeamsOPT = Object.keys(Setting.Links).filter(
   // loop for every Selected team
   for (let i = 0; i < Teams.length; i++) {
     // Fetch Their Teams Data
-    const spinner = ora(
-      COLORS.magenta("Fetching Data for : " + Teams[i])
-    ).start();
+    Load.add("1", { text: COLORS.magenta("Fetching Data for : " + Teams[i]) });
     const url = Setting.Links[Teams[i]];
     const csv = await axios.get(url);
     const Data = await csvtojson().fromString(csv.data);
-    spinner.succeed(COLORS.green("Fetched Data for : " + Teams[i]));
+    Load.succeed("1", { text: "Fetched Data : " + COLORS.yellow(Teams[i]) });
     TERMINATOR();
+
+    // loging Progress
     log(
       COLORS.magenta("FILE NBR :"),
       COLORS.yellow((i + 1).toString()) + "/" + COLORS.yellow(Teams.length)
     );
     log(
-      COLORS.magenta(Teams[i].toString().toUpperCase()) +
-        ":" +
-        COLORS.yellow(Data.length.toString())
+      COLORS.magenta(Teams[i].toString().toUpperCase()),
+      ":",
+      COLORS.yellow(Data.length.toString())
     );
     TERMINATOR();
     // calling Fetch for every Member
+
     const MinedData = await MINER(Data, Func, Teams[i]); // actual Data Fetch
     console.log(MinedData);
+    // Writing Data to file
+    const NotNames = Data.map((item) => item.name).filter(
+      (name) => !MinedData.map((item) => item.name).includes(name)
+    );
+    console.log;
+    FILE_SYSTEM.writeFileSync(
+      PATH.join(__dirname, "/out", Teams[i] + ".json"),
+      JSON.stringify(MinedData)
+    );
   }
   TERMINATOR();
   log(COLORS.green.bold("PROCESS COMPLETED"));
