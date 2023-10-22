@@ -7,6 +7,7 @@ const axios = require("axios");
 const COLORS = require("colors");
 const FILE_SYSTEM = require("fs");
 const { log } = require("console");
+const browser = require("chromium");
 const MINER = require("./miner.js");
 const Spinnies = require("spinnies");
 const csvtojson = require("csvtojson");
@@ -19,6 +20,7 @@ const Load = new Spinnies({
   succeedPrefix: "✔",
 });
 const Setting = JSON.parse(FILE_SYSTEM.readFileSync("./Settings.json"));
+const LEVELS = Setting.Miner.Levels;
 const TERMINATOR = () => log(COLORS.dim("=-".repeat(CLI_WIDTH() / 4)));
 // Preload
 console.clear();
@@ -84,7 +86,8 @@ const TeamsOPT = Object.keys(Setting.Links).filter(
 
     // loging Progress
     log(
-      COLORS.magenta("FILE NBR :"),
+      COLORS.magenta("FILE NBR"),
+      ":",
       COLORS.yellow((i + 1).toString()) + "/" + COLORS.yellow(Teams.length)
     );
     log(
@@ -93,30 +96,153 @@ const TeamsOPT = Object.keys(Setting.Links).filter(
       COLORS.yellow(Data.length.toString())
     );
     TERMINATOR();
+    Load.stopAll();
     // calling Fetch for every Member
-
     const MinedData = await MINER(Data, Func, Teams[i]); // actual Data Fetch
-    console.log(MinedData);
+    HandleData(MinedData, Teams[i], Func); // Writing Data to file
+
     // Writing Data to file
-    const NotNames = Data.map((item) => item.name).filter(
-      (name) => !MinedData.map((item) => item.name).includes(name)
-    );
-    console.log;
-    FILE_SYSTEM.writeFileSync(
-      PATH.join(__dirname, "/out", Teams[i] + ".json"),
-      JSON.stringify(MinedData)
-    );
   }
   TERMINATOR();
   log(COLORS.green.bold("PROCESS COMPLETED"));
-  const prompt = await new Confirm({
-    name: "question",
-    message: COLORS.yellow("OPEN OUTPUT DIRECTORY?"),
-    initial: false,
-  }).run();
-  if (prompt) {
-    POWER.execSync("open " + PATH.join(__dirname, "/out"));
-    log("Opened", COLORS.magenta(PATH.join(__dirname, "/out")));
-  }
+  // POWER.execSync("open " + PATH.join(__dirname, "/out"));
+  log("Open ->", COLORS.magenta(PATH.join(__dirname, "/out")));
   TERMINATOR();
 })();
+
+async function HandleData(Data, Team, Func) {
+  // creating file name
+  const FILENAME = Team + "_" + Func;
+  const sortedData = await Promise.all(
+    LEVELS.map((level) => {
+      return unsorted.filter((item) => item.level === level);
+    })
+  ).then((data) => {
+    return data.flat().reverse();
+  });
+  await PRINT(sortedData, FILENAME, Func == "CHEQUE DATA" ? "CD" : "SP");
+}
+
+const PRINT = async function (DATA, FILENAME, TYPE = "SP") {
+  const style = `<style id="style">
+  @page{margin: 0mm;}
+  * {color: ${Setting.print.HeadingColor};
+    margin: 0;
+    padding: 0;
+    font-family: ${Setting.print.Font};
+    text-align: left;
+  }
+  h1 {margin: 10px;text-align: center;}
+  body {
+    background-color: ${Setting.print.BackgroundColor};
+    zoom: ${Setting.print.PageZoom};
+  }
+  table {margin: auto;}
+  td,th {
+    padding: ${Setting.print.DataPadding};
+    border-left: ${Setting.print.BorderWidth} solid ${Setting.print.BorderColor};
+    min-width: max-content;
+  }
+  tr:nth-of-type(even) {
+    background-color: ${Setting.print.EvenRowColor};
+  }
+  th {
+    font-size: ${Setting.print.FontSize};
+    border-bottom: ${Setting.print.BorderWidth} solid ${Setting.print.BorderColor};
+  }
+  .a {color: ${Setting.print.Column1Col}}
+  .c {color: ${Setting.print.Column2Col}}
+  .d {color: ${Setting.print.Column3Col}}
+  .e {color: ${Setting.print.Column4Col}}
+  .b {color: #ff7b72}
+  .g {color: #656565da}
+  .hol {
+    width: max-content;
+    height: max-content;
+  }
+  </style>`;
+  let headers = "";
+  let rows = "";
+  if (TYPE === "SP") {
+    for (let i = 0; i < DATA.length; i++) {
+      let row = `<tr><td>${i + 1}</td>
+            <td class="a">${DATA[i].name}</td>
+            <td class="c">${DATA[i].level}</td>
+            <td class="d">${DATA[i].remainsaosp}</td>
+            <td class="e">${DATA[i].remainsgosp}</td></tr>`;
+      rows = rows + row;
+    }
+    headers = `<th>SAO</th><th>SGO</th>`;
+  } else {
+    // Making non repeating array of dates
+    let Dates = [];
+    let cheque = [];
+    DATA.forEach((el) => {
+      el.data.forEach((ele) => {
+        Dates.push(ele.payDate);
+      });
+    });
+
+    // Making headers
+    Dates = [...new Set(Dates)];
+    for (let i = 0; i < 4; i++) {
+      headers = headers + `<th>${Dates[i]}</th>`;
+    }
+
+    // sorting payCheque by dates
+    for (let i = 0; i < DATA.length; i++) {
+      for (let j = 0; j < 4; j++) {
+        cheque[j] = 0;
+        DATA[i].data.forEach((el) => {
+          if (el.payDate == Dates[j]) {
+            cheque[j] = cheque[j] + Number(el.amount);
+          }
+        });
+      }
+      let row = `<tr>
+            <td>${i + 1}</td>
+            <td class="a">${DATA[i].name}</td>
+            <td class="d">${DATA[i].level}</td>
+            <td class="${cheque[0] ? "e" : "b"}">
+            ${cheque[0]}</td>
+            <td class="${cheque[1] ? "e" : "b"}">
+            ${cheque[1]}</td>
+            <td class="${cheque[2] ? "e" : "b"}">
+            ${cheque[2]}</td>
+            <td class="${cheque[3] ? "e" : "b"}">
+            ${cheque[3]}</td>
+            </tr>`;
+      rows = rows + row;
+    }
+  }
+  var contentHtml = `
+    ${style}
+    <div class="hol">
+    <h1>${FILENAME}</h1>
+    <table><tbody><tr>
+    <th>SNo</th>
+    <th>Name</th>
+    <th>Level</th>
+    ${headers}
+  </tr>${rows}</tbody></table><div>
+<script>
+  const content = document.querySelector('.hol');
+  const contentWidth = content.clientWidth;
+  const contentHeight = content.clientHeight;
+  const style = "@page { size: " +contentWidth+"px "+contentHeight+"px}; margin: 0; }"
+  document.getElementById('style').innerHTML = document.getElementById('style').innerHTML + style
+  </script>`;
+
+  // print pdf
+  const command = `"${
+    browser.path
+  }" --headless --disable-gpu --print-to-pdf="${PATH.join(
+    __dirname,
+    "./out/",
+    FILENAME + ".pdf"
+  )}" --no-margins "${PATH.join(
+    __dirname,
+    "./archive/html/" + FILENAME + ".html"
+  )}"`;
+  POWER.execSync(command);
+};

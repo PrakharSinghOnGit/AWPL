@@ -216,7 +216,6 @@ const TARGET = async function (PAGE, NAME) {
     remainsgosp: remainsgosp,
   };
 };
-
 const CHEQUE = async function (PAGE, NAME) {
   if (WrongPass.includes(ID)) return 0;
   const pending = new PendingXHR(PAGE);
