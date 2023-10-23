@@ -47,7 +47,6 @@ const TeamsOPT = Object.keys(Setting.Links).filter(
   // Asking for which team to use
   const Func = await new MultiSelect({
     name: "Func",
-    initial: "LEVEL DATA",
     message: COLORS.yellow("Select Function ?"),
     choices: ["LEVEL DATA", "TARGET DATA", "CHEQUE DATA"],
   }).run();
@@ -77,8 +76,9 @@ const TeamsOPT = Object.keys(Setting.Links).filter(
     Load.add("1", { text: COLORS.magenta("Fetching Data for : " + Teams[i]) });
     const url = Setting.Links[Teams[i]];
     const csv = await axios.get(url);
-    const Data = (await csvtojson().fromString(csv.data)).slice(0, 3);
+    const Data = await csvtojson().fromString(csv.data);
     Load.succeed("1", { text: "Fetched Data : " + COLORS.yellow(Teams[i]) });
+    Load.remove("1");
     TERMINATOR();
 
     // loging Progress
@@ -121,7 +121,7 @@ async function SortData(DATA) {
   return sortedData;
 }
 
-async function MakeHtml(DATA) {
+async function MakeHtml(DATA, TYPE, FILENAME) {
   const style = `<style id="style">
   @page{margin: 0mm;}
   * {color: ${Setting.print.HeadingColor};
@@ -236,19 +236,22 @@ async function MakeHtml(DATA) {
 async function HandleData(Data, Team) {
   // creating file name
   if (Data.level.length != 0) {
+    let FileName = Team + "_Level_Data";
     let SortedLevelData = await SortData(Data.level);
-    let levelHtml = await MakeHtml(SortedLevelData);
-    FILE_SYSTEM.writeFileSync("./html/" + Team + "_Level_Data", levelHtml);
+    let levelHtml = await MakeHtml(SortedLevelData, "SP", FileName);
+    FILE_SYSTEM.writeFileSync("./html/" + FileName, levelHtml);
   }
   if (Data.level.length != 0) {
+    let FileName = Team + "_Target_Data";
     let SortedTargetData = await SortData(Data.target);
-    let TargetHtml = await MakeHtml(SortedTargetData);
-    FILE_SYSTEM.writeFileSync("./html/" + Team + "_Target_Data", TargetHtml);
+    let TargetHtml = await MakeHtml(SortedTargetData, "SP", FileName);
+    FILE_SYSTEM.writeFileSync("./html/" + FileName, TargetHtml);
   }
   if (Data.level.length != 0) {
+    let FileName = Team + "_Cheque_Data";
     let SortedChequeData = await SortData(Data.cheque);
-    let ChequeHtml = await MakeHtml(SortedChequeData);
-    FILE_SYSTEM.writeFileSync("./html/" + Team + "_Cheque_Data", ChequeHtml);
+    let ChequeHtml = await MakeHtml(SortedChequeData, "CD", FileName);
+    FILE_SYSTEM.writeFileSync("./html/" + FileName, ChequeHtml);
   }
   const files = FILE_SYSTEM.readdirSync("./html");
   files.forEach((file) => {

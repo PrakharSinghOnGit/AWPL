@@ -19,6 +19,7 @@ const Setting = JSON.parse(FILE_SYSTEM.readFileSync("./Settings.json"));
 const LEVELS = Setting.Miner.Levels;
 
 async function MINER(DATA, FUNCTION) {
+  let Ticker = DATA.length;
   const cluster = await Cluster.launch({
     // browser Launch Properties
     concurrency: Cluster.CONCURRENCY_CONTEXT, // Incognito Pages gor each Worker
@@ -59,9 +60,12 @@ async function MINER(DATA, FUNCTION) {
       else req.continue();
     });
     // ---------------------- Calling Awpl Functions Accordingly ----------------------
+    if (Ticker == 0)
+      return { level: LEVEL_OUT, target: TARGET_OUT, cheque: CHEQUE_OUT };
     await LOGIN(page, id, pass, name);
     if (FUNCTION.includes("LEVEL DATA")) {
       var data = await LEVEL(page, name, id);
+      Ticker--;
       if (data == 0) {
         Load.fail(id, {
           text: `${COLORS.red.bold(name)} : ${COLORS.dim("FAILED")}`,
@@ -75,6 +79,8 @@ async function MINER(DATA, FUNCTION) {
       }
     }
     if (FUNCTION.includes("TARGET DATA")) {
+      Ticker--;
+
       var data = await TARGET(page, name, id);
       if (data == 0) {
         Load.fail(id, {
@@ -181,6 +187,7 @@ async function LOGIN(PAGE, ID, PASS, NAME) {
 }
 async function TARGET(PAGE, NAME, ID) {
   if (WrongPass.includes(ID)) return 0;
+  const pending = new PendingXHR(PAGE);
   Load.update(ID, {
     text:
       COLORS.yellow.bold(NAME) +
@@ -193,34 +200,48 @@ async function TARGET(PAGE, NAME, ID) {
     Setting.Miner.TargetURL
   );
   await PAGE.waitForNavigation({ waitUntil: "networkidle2" });
-  let level = await PAGE.evaluate(() =>
-    document
-      .querySelector(
-        "#ctl00_ContentPlaceHolder1_CustomersGridView > tbody > tr:nth-child(2) > td:nth-child(3)"
-      )
-      .textContent.replace(" DS", "")
-      .toUpperCase()
-  );
-  let remainsaosp = await PAGE.evaluate(() =>
-    Number(
-      document.querySelector(
-        "#ctl00_ContentPlaceHolder1_CustomersGridView > tbody > tr:nth-child(2) > td:nth-child(6)"
-      ).textContent
-    ).toFixed()
-  );
-  let remainsgosp = await PAGE.evaluate(() =>
-    Number(
-      document.querySelector(
-        "#ctl00_ContentPlaceHolder1_CustomersGridView > tbody > tr:nth-child(2) > td:nth-child(7)"
-      ).textContent
-    ).toFixed()
-  );
-  return {
-    name: NAME,
-    level: level,
-    remainsaosp: remainsaosp,
-    remainsgosp: remainsgosp,
-  };
+  try {
+    await pending.waitForAllXhrFinished();
+    let level = await PAGE.evaluate(() =>
+      document
+        .querySelector(
+          "#ctl00_ContentPlaceHolder1_CustomersGridView > tbody > tr:nth-child(2) > td:nth-child(3)"
+        )
+        .textContent.replace(" DS", "")
+        .toUpperCase()
+    );
+    let remainsaosp = await PAGE.evaluate(() =>
+      Number(
+        document.querySelector(
+          "#ctl00_ContentPlaceHolder1_CustomersGridView > tbody > tr:nth-child(2) > td:nth-child(6)"
+        ).textContent
+      ).toFixed()
+    );
+    let remainsgosp = await PAGE.evaluate(() =>
+      Number(
+        document.querySelector(
+          "#ctl00_ContentPlaceHolder1_CustomersGridView > tbody > tr:nth-child(2) > td:nth-child(7)"
+        ).textContent
+      ).toFixed()
+    );
+    return {
+      name: NAME,
+      level: level,
+      remainsaosp: remainsaosp,
+      remainsgosp: remainsgosp,
+    };
+  } catch (error) {
+    Load.fail(ID, {
+      text:
+        COLORS.yellow.red(NAME) + " :" + COLORS.red(" EMPTY TARGET PAGE : "),
+    });
+    return {
+      name: NAME,
+      level: "-",
+      remainsaosp: "-",
+      remainsgosp: "-",
+    };
+  }
 }
 async function CHEQUE(PAGE, NAME) {
   if (WrongPass.includes(ID)) return 0;
@@ -232,8 +253,6 @@ async function CHEQUE(PAGE, NAME) {
     )
   );
   await PAGE.waitForNavigation({ waitUntil: "networkidle2" });
-  const sleep = (duration) =>
-    new Promise((resolve) => setTimeout(resolve, duration));
   await PAGE.evaluate(() => {
     let d = new Date();
     const pad = function (nbr) {
@@ -253,7 +272,7 @@ async function CHEQUE(PAGE, NAME) {
     await PAGE.waitForSelector(
       "#ctl00_ContentPlaceHolder1_gvIncome > tbody > tr:nth-child(1) > th:nth-child(1)"
     );
-    await sleep(1000);
+    await SLEEP(1000);
     await PAGE.evaluate(() => {
       var table = document.querySelector("table");
       var data = [];
