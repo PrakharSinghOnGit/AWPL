@@ -26,6 +26,7 @@
         "#JAGAT SINGH":"https://docs.google.com/spreadsheets/d/e/2PACX-1vRgrGtd6xHxV4hSRpQsRYj06N_2JpYkRtsl0dK4tTrj8XGrC7juGgl67BBg75P4nQoKhYepexiKyQlg/pub?output=csv"
     },
     "Miner":{
+        "Timeout": 10000,
         "SameDomainDelay": 1000,
         "MaxConcurrency": 10,
         "TargetURL": "https://www.asclepiuswellness.com/userpanel/UserMansoonJulyBonanzaNew.aspx",

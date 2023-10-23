@@ -236,8 +236,8 @@ const PRINT = async function (DATA, FILENAME, TYPE = "SP") {
   document.getElementById('style').innerHTML = document.getElementById('style').innerHTML + style
   </script>`;
   // writing html file
-  FILE_SYSTEM.writeFileSync(
-    PATH.join(__dirname, "./archive/html/" + FILENAME + ".html"),
+  FILE_SYSTEM.writeFile(
+    PATH.join(__dirname, "./html/" + FILENAME + ".html"),
     contentHtml
   );
   // print pdf

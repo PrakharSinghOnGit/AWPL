@@ -25,7 +25,9 @@ async function MINER(DATA, FUNCTION) {
     maxConcurrency: Setting.Miner.Debug ? 1 : Setting.Miner.MaxConcurrency,
     puppeteer: PUPPETEER,
     sameDomainDelay: Setting.Miner.SameDomainDelay,
+    timeout: Setting.Miner.Timeout,
     puppeteerOptions: {
+      timeout: Setting.Miner.Timeout,
       headless: Setting.Miner.Debug ? false : "new",
       defaultViewport: null,
       args: [`--start-maximized`, `--auto-open-devtools-for-tabs`],
@@ -119,7 +121,7 @@ const LEVEL = async function (PAGE, NAME, ID) {
       COLORS.yellow.bold(NAME) +
       " :" +
       COLORS.dim.magenta(" Opening Level Page : "),
-    spinnerColor: "yellow",
+    spinnerColor: "magenta",
   });
   await PAGE.waitForNavigation({ waitUntil: "networkidle2" });
   await SLEEP(1000);
