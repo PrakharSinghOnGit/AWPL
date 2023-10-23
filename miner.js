@@ -70,7 +70,12 @@ async function MINER(DATA, FUNCTION) {
         Load.fail(id, {
           text: `${COLORS.red.bold(name)} : ${COLORS.dim("FAILED")}`,
         });
-        LEVEL_OUT.push({ name });
+        LEVEL_OUT.push({
+          name: name,
+          level: "-",
+          remainsaosp: "-",
+          remainsgosp: "-",
+        });
       } else {
         Load.succeed(id, {
           text: `${COLORS.green.bold(name)} : ${COLORS.dim("SUCCESS")}`,
@@ -80,13 +85,17 @@ async function MINER(DATA, FUNCTION) {
     }
     if (FUNCTION.includes("TARGET DATA")) {
       Ticker--;
-
       var data = await TARGET(page, name, id);
       if (data == 0) {
         Load.fail(id, {
           text: `${COLORS.red.bold(name)} : ${COLORS.dim("FAILED")}`,
         });
-        TARGET_OUT.push({ name });
+        TARGET_OUT.push({
+          name: name,
+          level: "-",
+          remainsaosp: "-",
+          remainsgosp: "-",
+        });
       } else {
         Load.succeed(id, {
           text: `${COLORS.green.bold(name)} : ${COLORS.dim("SUCCESS")}`,

@@ -239,19 +239,19 @@ async function HandleData(Data, Team) {
     let FileName = Team + "_Level_Data";
     let SortedLevelData = await SortData(Data.level);
     let levelHtml = await MakeHtml(SortedLevelData, "SP", FileName);
-    FILE_SYSTEM.writeFileSync("./html/" + FileName, levelHtml);
+    FILE_SYSTEM.writeFileSync("./html/" + FileName + ".html", levelHtml);
   }
-  if (Data.level.length != 0) {
+  if (Data.target.length != 0) {
     let FileName = Team + "_Target_Data";
     let SortedTargetData = await SortData(Data.target);
     let TargetHtml = await MakeHtml(SortedTargetData, "SP", FileName);
-    FILE_SYSTEM.writeFileSync("./html/" + FileName, TargetHtml);
+    FILE_SYSTEM.writeFileSync("./html/" + FileName + ".html", TargetHtml);
   }
-  if (Data.level.length != 0) {
+  if (Data.cheque.length != 0) {
     let FileName = Team + "_Cheque_Data";
     let SortedChequeData = await SortData(Data.cheque);
     let ChequeHtml = await MakeHtml(SortedChequeData, "CD", FileName);
-    FILE_SYSTEM.writeFileSync("./html/" + FileName, ChequeHtml);
+    FILE_SYSTEM.writeFileSync("./html/" + FileName + ".html", ChequeHtml);
   }
   const files = FILE_SYSTEM.readdirSync("./html");
   files.forEach((file) => {
