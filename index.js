@@ -1,6 +1,3 @@
-// To track Time
-console.time("Time Taken ");
-
 // importing modules
 const PATH = require("path");
 const axios = require("axios");
@@ -13,7 +10,7 @@ const Spinnies = require("spinnies");
 const csvtojson = require("csvtojson");
 const CLI_WIDTH = require("cli-width");
 const POWER = require("child_process");
-const { MultiSelect, Confirm, Select } = require("enquirer");
+const { MultiSelect } = require("enquirer");
 
 // assigning constants
 const Load = new Spinnies({
@@ -48,7 +45,7 @@ const TeamsOPT = Object.keys(Setting.Links).filter(
 
 (async () => {
   // Asking for which team to use
-  const Func = await new Select({
+  const Func = await new MultiSelect({
     name: "Func",
     initial: "LEVEL DATA",
     message: COLORS.yellow("Select Function ?"),
@@ -80,7 +77,7 @@ const TeamsOPT = Object.keys(Setting.Links).filter(
     Load.add("1", { text: COLORS.magenta("Fetching Data for : " + Teams[i]) });
     const url = Setting.Links[Teams[i]];
     const csv = await axios.get(url);
-    const Data = await csvtojson().fromString(csv.data);
+    const Data = (await csvtojson().fromString(csv.data)).slice(0, 3);
     Load.succeed("1", { text: "Fetched Data : " + COLORS.yellow(Teams[i]) });
     TERMINATOR();
 
@@ -99,7 +96,7 @@ const TeamsOPT = Object.keys(Setting.Links).filter(
     Load.stopAll();
     // calling Fetch for every Member
     const MinedData = await MINER(Data, Func, Teams[i]); // actual Data Fetch
-    HandleData(MinedData, Teams[i], Func); // Writing Data to file
+    HandleData(MinedData, Teams[i].replaceAll(" ", "_"), Func); // Writing Data to file
 
     // Writing Data to file
   }
@@ -110,23 +107,21 @@ const TeamsOPT = Object.keys(Setting.Links).filter(
   TERMINATOR();
 })();
 
-async function HandleData(Data, Team, Func) {
-  // creating file name
-  const FILENAME = Team + " " + Func;
+async function SortData(DATA) {
   LEVELS.unshift("-");
   const sortedData = await Promise.all(
     LEVELS.map((level) => {
-      return Data.filter((item) => item.level === level);
+      return DATA.filter((item) => item.level === level);
     })
   ).then((data) => {
     const sorted = data.flat().reverse();
-    const unsorted = Data.filter((item) => !item.level);
+    const unsorted = DATA.filter((item) => !item.level);
     return sorted.concat(unsorted);
   });
-  await PRINT(sortedData, FILENAME, Func == "CHEQUE DATA" ? "CD" : "SP");
+  return sortedData;
 }
 
-const PRINT = async function (DATA, FILENAME, TYPE = "SP") {
+async function MakeHtml(DATA) {
   const style = `<style id="style">
   @page{margin: 0mm;}
   * {color: ${Setting.print.HeadingColor};
@@ -235,18 +230,35 @@ const PRINT = async function (DATA, FILENAME, TYPE = "SP") {
   const style = "@page { size: " +contentWidth+"px "+contentHeight+"px}; margin: 0; }"
   document.getElementById('style').innerHTML = document.getElementById('style').innerHTML + style
   </script>`;
-  // writing html file
-  FILE_SYSTEM.writeFile(
-    PATH.join(__dirname, "./html/" + FILENAME + ".html"),
-    contentHtml
-  );
-  // print pdf
-  const command = `"${
-    browser.path
-  }" --headless --disable-gpu --print-to-pdf="${PATH.join(
-    __dirname,
-    "./out/",
-    FILENAME + ".pdf"
-  )}" --no-margins "${PATH.join(__dirname, "./html/" + FILENAME + ".html")}"`;
-  POWER.execSync(command);
-};
+  return contentHtml;
+}
+
+async function HandleData(Data, Team) {
+  // creating file name
+  if (Data.level.length != 0) {
+    let SortedLevelData = await SortData(Data.level);
+    let levelHtml = await MakeHtml(SortedLevelData);
+    FILE_SYSTEM.writeFileSync("./html/" + Team + "_Level_Data", levelHtml);
+  }
+  if (Data.level.length != 0) {
+    let SortedTargetData = await SortData(Data.target);
+    let TargetHtml = await MakeHtml(SortedTargetData);
+    FILE_SYSTEM.writeFileSync("./html/" + Team + "_Target_Data", TargetHtml);
+  }
+  if (Data.level.length != 0) {
+    let SortedChequeData = await SortData(Data.cheque);
+    let ChequeHtml = await MakeHtml(SortedChequeData);
+    FILE_SYSTEM.writeFileSync("./html/" + Team + "_Cheque_Data", ChequeHtml);
+  }
+  const files = FILE_SYSTEM.readdirSync("./html");
+  files.forEach((file) => {
+    console.log("./html/" + file);
+    POWER.execFileSync(browser.path, [
+      "--headless",
+      "--disable-gpu",
+      `--print-to-pdf=${__dirname}/out/${file.replace(".html", "")}.pdf`,
+      "--no-margins",
+      `${__dirname}/html/${file}`,
+    ]);
+  });
+}

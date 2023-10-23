@@ -35,10 +35,13 @@ async function MINER(DATA, FUNCTION) {
   });
   cluster.on("taskerror", async (err, { name, pass, id }) => {
     // Error Handling
-    Load.fail(id, {
-      text: `${COLORS.red.bold(name)} : ${err.message.toString()}`,
-    });
     if (WrongPass.includes(id)) return;
+    if (Load.checkIfActiveSpinners(id)) {
+      Load.update(id, {
+        text: `${COLORS.red.bold(name)} : ${err.message.toString()}`,
+        spinnerColor: "red",
+      });
+    }
     cluster.queue({ id: id, pass: pass, name: name });
   });
   const LEVEL_OUT = [];
@@ -73,10 +76,17 @@ async function MINER(DATA, FUNCTION) {
     }
     if (FUNCTION.includes("TARGET DATA")) {
       var data = await TARGET(page, name, id);
-      Load.succeed(id, {
-        text: `${COLORS.green("SUCCESS")} : ${COLORS.yellow(name)}`,
-      });
-      TARGET_OUT.push(data); // push data to output
+      if (data == 0) {
+        Load.fail(id, {
+          text: `${COLORS.red.bold(name)} : ${COLORS.dim("FAILED")}`,
+        });
+        TARGET_OUT.push({ name });
+      } else {
+        Load.succeed(id, {
+          text: `${COLORS.green.bold(name)} : ${COLORS.dim("SUCCESS")}`,
+        });
+        TARGET_OUT.push(data); // push data to output
+      }
     }
     if (FUNCTION.includes("CHEQUE DATA")) {
       var data = await CHEQUE(page, name, id);
@@ -92,23 +102,9 @@ async function MINER(DATA, FUNCTION) {
   }
   await cluster.idle(); // closing when done
   await cluster.close(); // closing when done
-  if (LEVEL_OUT.length != 0) {
-    // Handle Level Output File
-    return LEVEL_OUT;
-  }
-  if (TARGET_OUT.length != 0) {
-    // Handle Target Output File
-    // const Sorted_Target_Out = await SORT(TARGET_OUT, true, "Target"); // sorting Out Data by Level
-    // await PRINT(Sorted_Target_Out, FILENAME + " Target Data");
-  }
-  if (CHEQUE_OUT.length != 0) {
-    // Handle Cheque Output FIle
-    // const Sorted_Cheque_Out = await SORT(CHEQUE_OUT);
-    // await PRINT(Sorted_Cheque_Out, FILENAME + " Cheque Data", "Cheque");
-  }
+  return { level: LEVEL_OUT, target: TARGET_OUT, cheque: CHEQUE_OUT };
 }
-
-const LEVEL = async function (PAGE, NAME, ID) {
+async function LEVEL(PAGE, NAME, ID) {
   if (WrongPass.includes(ID)) return 0;
   await PAGE.evaluate(() =>
     window.open(
@@ -157,8 +153,8 @@ const LEVEL = async function (PAGE, NAME, ID) {
     remainsgosp: Number(targetdata[1]).toFixed(),
   };
   return data;
-};
-const LOGIN = async function (PAGE, ID, PASS, NAME) {
+}
+async function LOGIN(PAGE, ID, PASS, NAME) {
   PAGE.on("dialog", async (dialog) => {
     let dialogMessage = dialog
       .message()
@@ -182,9 +178,16 @@ const LOGIN = async function (PAGE, ID, PASS, NAME) {
     { waitUntil: "networkidle2" }
   );
   return;
-};
-const TARGET = async function (PAGE, NAME) {
+}
+async function TARGET(PAGE, NAME, ID) {
   if (WrongPass.includes(ID)) return 0;
+  Load.update(ID, {
+    text:
+      COLORS.yellow.bold(NAME) +
+      " :" +
+      COLORS.dim.cyan(" Opening Target Page : "),
+    spinnerColor: "cyan",
+  });
   await PAGE.evaluate(
     (URL) => window.open(URL, "_self"),
     Setting.Miner.TargetURL
@@ -212,15 +215,14 @@ const TARGET = async function (PAGE, NAME) {
       ).textContent
     ).toFixed()
   );
-  // log(`${COLORS.red('-ERROR- :')} ${COLORS.yellow(NAME)} : ${COLORS.dim("Target Page Empty!")}`);
   return {
     name: NAME,
     level: level,
     remainsaosp: remainsaosp,
     remainsgosp: remainsgosp,
   };
-};
-const CHEQUE = async function (PAGE, NAME) {
+}
+async function CHEQUE(PAGE, NAME) {
   if (WrongPass.includes(ID)) return 0;
   const pending = new PendingXHR(PAGE);
   await PAGE.evaluate(() =>
@@ -355,6 +357,6 @@ const CHEQUE = async function (PAGE, NAME) {
     data: RawData,
     level: level,
   };
-};
+}
 
 module.exports = MINER;

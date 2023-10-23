@@ -18,15 +18,15 @@
         "#VINOD BISHT":"https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1zHtuH3TKakWGbcPoT-yysxKUivRtvde5CgDj_G3FoqrJNZ2-2vFqqTVN442SNQTqUwnRxY0qNp5b/pub?output=csv",
         "#RAVINDRA SINGH":"https://docs.google.com/spreadsheets/d/e/2PACX-1vR5ofOUq75rxnttY0RC_6avzj0m0ZKrONksEnpwkEP0hBJbYF2Bb_z7lGWXL6y0b3mn8WtodLkd3mPp/pub?output=csv",
         "#RAMESH SINGH":"https://docs.google.com/spreadsheets/d/e/2PACX-1vSF2vKeytCM5yC_YhujZ1mEMqUV9lWwGCxOH3ljZrzm8qEvWMt5qxfZhELTCVq6v3ZNwqJwscp2Ivr8/pub?output=csv",
+        "#JAGAT SINGH":"https://docs.google.com/spreadsheets/d/e/2PACX-1vRgrGtd6xHxV4hSRpQsRYj06N_2JpYkRtsl0dK4tTrj8XGrC7juGgl67BBg75P4nQoKhYepexiKyQlg/pub?output=csv",
         "SD VYAS":"https://docs.google.com/spreadsheets/d/e/2PACX-1vRGFdSRIlxFt7M5tXdnFwrl3SIJhdxVYy0JOEIMwyIgKgtVeIKMzwoljtN1BBXge3b19GSkGcPpw5HE/pub?output=csv",
         "HARISH CHAND":"https://docs.google.com/spreadsheets/d/e/2PACX-1vTr7qYan4TgdWb0goz0hGe_9-Kkd3WOkekgijGaOn0AJvEZf_FQJPNOcv6xmDIYmgg_2ftjLBOs6VQb/pub?output=csv",
         "SUNIL PANT":"https://docs.google.com/spreadsheets/d/e/2PACX-1vRc8HJ4DVcYokApxcM1R4OTH73Q22dvzB5K5OxMfe5ebA5_8tvWfKJphqsEQ4ipI4_XBFSCjLBItSD-/pub?output=csv",
         "RAJENDER VYAS":"https://docs.google.com/spreadsheets/d/e/2PACX-1vS78hqjzCg3vZuJjDXQwPdfJtPdeYtNPSXv35zw6WIJ1VmW_0xgu2875oBZuoyswgYkGESpmyPQbPqI/pub?output=csv",
-        "TOPAZ AND ABOVE":"https://docs.google.com/spreadsheets/d/e/2PACX-1vQ66JkdGhTgGf49NYmqhdsWUuS1-nKe_gZk-fnLbBozzKluahYmqNl6RGT6EXyRwZNEMwmjlFEa4-SD/pub?output=csv",
-        "#JAGAT SINGH":"https://docs.google.com/spreadsheets/d/e/2PACX-1vRgrGtd6xHxV4hSRpQsRYj06N_2JpYkRtsl0dK4tTrj8XGrC7juGgl67BBg75P4nQoKhYepexiKyQlg/pub?output=csv"
+        "TOPAZ AND ABOVE":"https://docs.google.com/spreadsheets/d/e/2PACX-1vQ66JkdGhTgGf49NYmqhdsWUuS1-nKe_gZk-fnLbBozzKluahYmqNl6RGT6EXyRwZNEMwmjlFEa4-SD/pub?output=csv"
     },
     "Miner":{
-        "Timeout": 10000,
+        "Timeout": 30000,
         "SameDomainDelay": 1000,
         "MaxConcurrency": 10,
         "TargetURL": "https://www.asclepiuswellness.com/userpanel/UserMansoonJulyBonanzaNew.aspx",
