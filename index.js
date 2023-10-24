@@ -102,6 +102,16 @@ const TeamsOPT = Object.keys(Setting.Links).filter(
   }
   TERMINATOR();
   log(COLORS.green.bold("PROCESS COMPLETED"));
+  const files = FILE_SYSTEM.readdirSync("./html");
+  files.forEach((file) => {
+    POWER.execFileSync(browser.path, [
+      "--headless",
+      "--disable-gpu",
+      `--print-to-pdf=${__dirname}/out/${file.replace(".html", "")}.pdf`,
+      "--no-margins",
+      `${__dirname}/html/${file}`,
+    ]);
+  });
   // POWER.execSync("open " + PATH.join(__dirname, "/out"));
   log("Open ->", COLORS.magenta(PATH.join(__dirname, "/out")));
   TERMINATOR();
@@ -253,15 +263,4 @@ async function HandleData(Data, Team) {
     let ChequeHtml = await MakeHtml(SortedChequeData, "CD", FileName);
     FILE_SYSTEM.writeFileSync("./html/" + FileName + ".html", ChequeHtml);
   }
-  const files = FILE_SYSTEM.readdirSync("./html");
-  files.forEach((file) => {
-    console.log("./html/" + file);
-    POWER.execFileSync(browser.path, [
-      "--headless",
-      "--disable-gpu",
-      `--print-to-pdf=${__dirname}/out/${file.replace(".html", "")}.pdf`,
-      "--no-margins",
-      `${__dirname}/html/${file}`,
-    ]);
-  });
 }
