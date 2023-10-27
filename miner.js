@@ -70,6 +70,8 @@ async function MINER(DATA, FUNCTION) {
         Load.fail(id, {
           text: `${COLORS.red.bold(name)} : ${COLORS.dim("FAILED")}`,
         });
+        // check if LEVEL_OUT aleardy has an object with same name
+        if (LEVEL_OUT.includes(data.name)) return;
         LEVEL_OUT.push({
           name: name,
           level: "-",
@@ -90,6 +92,7 @@ async function MINER(DATA, FUNCTION) {
         Load.fail(id, {
           text: `${COLORS.red.bold(name)} : ${COLORS.dim("FAILED")}`,
         });
+        if (LEVEL_OUT.includes(data.name)) return;
         TARGET_OUT.push({
           name: name,
           level: "-",
@@ -117,7 +120,6 @@ async function MINER(DATA, FUNCTION) {
   }
   await cluster.idle(); // closing when done
   await cluster.close(); // closing when done
-  return { level: LEVEL_OUT, target: TARGET_OUT, cheque: CHEQUE_OUT };
 }
 async function LEVEL(PAGE, NAME, ID) {
   if (WrongPass.includes(ID)) return 0;
