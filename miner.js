@@ -60,6 +60,10 @@ async function MINER(DATA, FUNCTION) {
       else req.continue();
     });
     // ---------------------- Calling Awpl Functions Accordingly ----------------------
+    if (Ticker == 0) {
+      FILE_SYSTEM.writeFileSync("TEST.json", JSON.stringify(LEVEL_OUT));
+      return LEVEL_OUT;
+    }
     await LOGIN(page, id, pass, name);
     if (FUNCTION.includes("LEVEL DATA")) {
       var data = await LEVEL(page, name, id);
@@ -68,23 +72,37 @@ async function MINER(DATA, FUNCTION) {
         Load.fail(id, {
           text: `${COLORS.red.bold(name)} : ${COLORS.dim("FAILED")}`,
         });
-        LEVEL_OUT.push({ name });
+        // check if LEVEL_OUT aleardy has an object with same name
+        // if (LEVEL_OUT.includes(data.name)) return;
+        LEVEL_OUT.push({
+          name: name,
+          level: "-",
+          remainsaosp: "-",
+          remainsgosp: "-",
+        });
       } else {
         Load.succeed(id, {
-          text: `${COLORS.green.bold(name)} : ${COLORS.dim("SUCCESS")}`,
+          text: `${COLORS.green.bold(name)} : ${COLORS.dim("SUCCESS")} : ${
+            data.level
+          } ${data.remainsaosp} ${data.remainsgosp}`,
         });
         LEVEL_OUT.push(data); // push data to output
       }
     }
     if (FUNCTION.includes("TARGET DATA")) {
       Ticker--;
-
       var data = await TARGET(page, name, id);
       if (data == 0) {
         Load.fail(id, {
           text: `${COLORS.red.bold(name)} : ${COLORS.dim("FAILED")}`,
         });
-        TARGET_OUT.push({ name });
+        if (LEVEL_OUT.includes(data.name)) return;
+        TARGET_OUT.push({
+          name: name,
+          level: "-",
+          remainsaosp: "-",
+          remainsgosp: "-",
+        });
       } else {
         Load.succeed(id, {
           text: `${COLORS.green.bold(name)} : ${COLORS.dim("SUCCESS")}`,
@@ -106,7 +124,6 @@ async function MINER(DATA, FUNCTION) {
   }
   await cluster.idle(); // closing when done
   await cluster.close(); // closing when done
-  return { level: LEVEL_OUT, target: TARGET_OUT, cheque: CHEQUE_OUT };
 }
 async function LEVEL(PAGE, NAME, ID) {
   if (WrongPass.includes(ID)) return 0;
@@ -185,6 +202,7 @@ async function LOGIN(PAGE, ID, PASS, NAME) {
 }
 async function TARGET(PAGE, NAME, ID) {
   if (WrongPass.includes(ID)) return 0;
+  const pending = new PendingXHR(PAGE);
   Load.update(ID, {
     text:
       COLORS.yellow.bold(NAME) +
@@ -197,34 +215,48 @@ async function TARGET(PAGE, NAME, ID) {
     Setting.Miner.TargetURL
   );
   await PAGE.waitForNavigation({ waitUntil: "networkidle2" });
-  let level = await PAGE.evaluate(() =>
-    document
-      .querySelector(
-        "#ctl00_ContentPlaceHolder1_CustomersGridView > tbody > tr:nth-child(2) > td:nth-child(3)"
-      )
-      .textContent.replace(" DS", "")
-      .toUpperCase()
-  );
-  let remainsaosp = await PAGE.evaluate(() =>
-    Number(
-      document.querySelector(
-        "#ctl00_ContentPlaceHolder1_CustomersGridView > tbody > tr:nth-child(2) > td:nth-child(6)"
-      ).textContent
-    ).toFixed()
-  );
-  let remainsgosp = await PAGE.evaluate(() =>
-    Number(
-      document.querySelector(
-        "#ctl00_ContentPlaceHolder1_CustomersGridView > tbody > tr:nth-child(2) > td:nth-child(7)"
-      ).textContent
-    ).toFixed()
-  );
-  return {
-    name: NAME,
-    level: level,
-    remainsaosp: remainsaosp,
-    remainsgosp: remainsgosp,
-  };
+  try {
+    await pending.waitForAllXhrFinished();
+    let level = await PAGE.evaluate(() =>
+      document
+        .querySelector(
+          "#ctl00_ContentPlaceHolder1_CustomersGridView > tbody > tr:nth-child(2) > td:nth-child(3)"
+        )
+        .textContent.replace(" DS", "")
+        .toUpperCase()
+    );
+    let remainsaosp = await PAGE.evaluate(() =>
+      Number(
+        document.querySelector(
+          "#ctl00_ContentPlaceHolder1_CustomersGridView > tbody > tr:nth-child(2) > td:nth-child(6)"
+        ).textContent
+      ).toFixed()
+    );
+    let remainsgosp = await PAGE.evaluate(() =>
+      Number(
+        document.querySelector(
+          "#ctl00_ContentPlaceHolder1_CustomersGridView > tbody > tr:nth-child(2) > td:nth-child(7)"
+        ).textContent
+      ).toFixed()
+    );
+    return {
+      name: NAME,
+      level: level,
+      remainsaosp: remainsaosp,
+      remainsgosp: remainsgosp,
+    };
+  } catch (error) {
+    Load.fail(ID, {
+      text:
+        COLORS.yellow.red(NAME) + " :" + COLORS.red(" EMPTY TARGET PAGE : "),
+    });
+    return {
+      name: NAME,
+      level: "-",
+      remainsaosp: "-",
+      remainsgosp: "-",
+    };
+  }
 }
 async function CHEQUE(PAGE, NAME) {
   if (WrongPass.includes(ID)) return 0;
@@ -236,8 +268,6 @@ async function CHEQUE(PAGE, NAME) {
     )
   );
   await PAGE.waitForNavigation({ waitUntil: "networkidle2" });
-  const sleep = (duration) =>
-    new Promise((resolve) => setTimeout(resolve, duration));
   await PAGE.evaluate(() => {
     let d = new Date();
     const pad = function (nbr) {
@@ -257,7 +287,7 @@ async function CHEQUE(PAGE, NAME) {
     await PAGE.waitForSelector(
       "#ctl00_ContentPlaceHolder1_gvIncome > tbody > tr:nth-child(1) > th:nth-child(1)"
     );
-    await sleep(1000);
+    await SLEEP(1000);
     await PAGE.evaluate(() => {
       var table = document.querySelector("table");
       var data = [];

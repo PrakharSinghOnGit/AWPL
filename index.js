@@ -11,6 +11,7 @@ const csvtojson = require("csvtojson");
 const CLI_WIDTH = require("cli-width");
 const POWER = require("child_process");
 const { MultiSelect } = require("enquirer");
+const LEVELMINER = require("./level.js");
 
 // assigning constants
 const Load = new Spinnies({
@@ -95,8 +96,9 @@ const TeamsOPT = Object.keys(Setting.Links).filter(
     TERMINATOR();
     Load.stopAll();
     // calling Fetch for every Member
-    const MinedData = await MINER(Data, Func, Teams[i]); // actual Data Fetch
-    HandleData(MinedData, Teams[i].replaceAll(" ", "_"), Func); // Writing Data to file
+
+    await LEVELMINER(Data, Teams[i]); // actual Data Fetch
+    //HandleData(MinedData, Teams[i].replaceAll(" ", "_"), Func); // Writing Data to file
 
     // Writing Data to file
   }
@@ -245,22 +247,9 @@ async function MakeHtml(DATA, TYPE, FILENAME) {
 
 async function HandleData(Data, Team) {
   // creating file name
-  if (Data.level.length != 0) {
-    let FileName = Team + "_Level_Data";
-    let SortedLevelData = await SortData(Data.level);
-    let levelHtml = await MakeHtml(SortedLevelData, "SP", FileName);
-    FILE_SYSTEM.writeFileSync("./html/" + FileName + ".html", levelHtml);
-  }
-  if (Data.target.length != 0) {
-    let FileName = Team + "_Target_Data";
-    let SortedTargetData = await SortData(Data.target);
-    let TargetHtml = await MakeHtml(SortedTargetData, "SP", FileName);
-    FILE_SYSTEM.writeFileSync("./html/" + FileName + ".html", TargetHtml);
-  }
-  if (Data.cheque.length != 0) {
-    let FileName = Team + "_Cheque_Data";
-    let SortedChequeData = await SortData(Data.cheque);
-    let ChequeHtml = await MakeHtml(SortedChequeData, "CD", FileName);
-    FILE_SYSTEM.writeFileSync("./html/" + FileName + ".html", ChequeHtml);
-  }
+  console.log(Data);
+  let FileName = Team + "_Level_Data";
+  let SortedLevelData = await SortData(Data);
+  let levelHtml = await MakeHtml(SortedLevelData, "SP", FileName);
+  FILE_SYSTEM.writeFileSync("./html/" + FileName + ".html", levelHtml);
 }
