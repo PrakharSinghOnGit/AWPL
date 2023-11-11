@@ -3,10 +3,12 @@ const Setting = JSON.parse(fs.readFileSync("./Settings.json"));
 const LEVELS = Setting.Miner.Levels;
 const child_process = require("child_process");
 const chromium = require("chromium");
+const { log } = require("console");
 const files = require("fs").readdirSync("./json");
 
 (async () => {
   await MakeJsons();
+  log("Jsons Made");
   await Print();
 })();
 
@@ -14,11 +16,7 @@ async function MakeJsons() {
   files.forEach(async (file) => {
     const data = JSON.parse(fs.readFileSync(`./json/${file}`));
     let SortedLevelData = await SortData(data);
-    let levelHtml = await MakeHtml(
-      SortedLevelData,
-      "SP",
-      file.replace(".json", "")
-    );
+    let levelHtml = MakeHtml(SortedLevelData, "SP", file.replace(".json", ""));
     fs.writeFileSync(
       "./html/" + file.replace(".json", "") + ".html",
       levelHtml
@@ -28,6 +26,7 @@ async function MakeJsons() {
 
 async function Print() {
   const htmls = fs.readdirSync("./html");
+  log(htmls);
   htmls.forEach((file) => {
     child_process.execFileSync(chromium.path, [
       "--headless",
@@ -37,23 +36,24 @@ async function Print() {
       `${__dirname}/html/${file}`,
     ]);
   });
+  log("Printed");
 }
 
 async function SortData(DATA) {
   LEVELS.unshift("-");
-  const sortedData = await Promise.all(
-    LEVELS.map((level) => {
-      return DATA.filter((item) => item.level === level);
-    })
-  ).then((data) => {
-    const sorted = data.flat().reverse();
-    const unsorted = DATA.filter((item) => !item.level);
-    return sorted.concat(unsorted);
-  });
+  const sortedData = [];
+  for (let i = 0; i < LEVELS.length; i++) {
+    for (let j = 0; j < DATA.length; j++) {
+      if (DATA[j].level === LEVELS[i]) {
+        sortedData.push(DATA[j]);
+      }
+    }
+  }
+  sortedData.reverse();
   return sortedData;
 }
 
-async function MakeHtml(DATA, TYPE, FILENAME) {
+function MakeHtml(DATA, TYPE, FILENAME) {
   const style = `<style id="style">
   @page{margin: 0mm;}
   * {color: ${Setting.print.HeadingColor};

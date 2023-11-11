@@ -51,6 +51,7 @@ bower_components
 
 .lock-wscript
 
+
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 
 build/Release
@@ -77,6 +78,7 @@ web_modules/
 .eslintcache
 
 # Optional stylelint cache
+package-lock.json
 
 .stylelintcache
 
