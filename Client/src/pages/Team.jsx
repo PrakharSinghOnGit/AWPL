@@ -1,17 +1,10 @@
-import React, { useState, useEffect } from "react";
-import io from "socket.io-client";
-
-const socket = io("http://localhost:3000"); // replace with your server URL
+import React, { useEffect, useState } from "react";
+import { SocketContext } from "../service/socketContext";
 
 function Team({ onSubmit }) {
+  const socket = React.useContext(SocketContext);
   const [options, setOptions] = useState([]);
   const [selectedOptions, setSelectedOptions] = useState([]);
-
-  useEffect(() => {
-    socket.on("teams", (options) => {
-      setOptions(options);
-    });
-  }, []);
 
   const handleOptionSelect = (option) => {
     if (selectedOptions.includes(option)) {
@@ -20,6 +13,13 @@ function Team({ onSubmit }) {
       setSelectedOptions([...selectedOptions, option]);
     }
   };
+
+  useEffect(() => {
+    socket.emit("sendTeams");
+    socket.on("teams", (options) => {
+      setOptions(options);
+    });
+  }, []);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -30,16 +30,16 @@ function Team({ onSubmit }) {
     <div>
       <h1>Select Options</h1>
       {options.map((option) => (
-        <div key={option}>
+        <div key={option.name}>
           <input
             type="checkbox"
-            id={option}
-            name={option}
-            value={option}
+            id={option.name}
+            name={option.name}
+            value={option.name}
             checked={selectedOptions.includes(option)}
             onChange={() => handleOptionSelect(option)}
           />
-          <label htmlFor={option}>{option}</label>
+          <label htmlFor={option.name}>{option.name}</label>
         </div>
       ))}
       <button onClick={handleSubmit}>Submit</button>

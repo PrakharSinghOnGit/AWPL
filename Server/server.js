@@ -9,8 +9,16 @@ const io = require("socket.io")(3000, {
   },
 });
 io.on("connection", (socket) => {
-  console.log("connected", socket.id);
-  socket.emit("teams", getTeams());
+  console.log("connected to client", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("disconnected from client", socket.id);
+  });
+
+  socket.on("sendTeams", (data) => {
+    console.log(`Received "SEND TEAMS" request from client`);
+    socket.emit("teams", getTeams());
+  });
 });
 
 function getTeams() {

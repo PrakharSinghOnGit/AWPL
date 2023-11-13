@@ -1,37 +1,39 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Function from "./pages/Function";
 import Team from "./pages/Team";
 import Main from "./pages/app/main";
+import socket from "./service/socketio";
+import { SocketContext } from "./service/socketcontext";
 
 const App = () => {
   const [selectedFunction, setSelectedFunction] = useState(null);
   const [selectedTeams, setSelectedTeams] = useState([]);
-  const [progressData, setProgressData] = useState([]);
 
   const handleFunctionSubmit = (selectedFunction) => {
+    console.log(selectedFunction);
     setSelectedFunction(selectedFunction);
   };
 
   const handleTeamSubmit = (selectedTeams) => {
+    console.log(selectedTeams);
     setSelectedTeams(selectedTeams);
   };
 
   return (
-    <div>
-      <h1>AWPL HELPER</h1>
-      {/* Step 1: Select Function */}
-      {!selectedFunction && <Function onSubmit={handleFunctionSubmit} />}
+    <SocketContext.Provider value={socket}>
+      <div>
+        <h1>AWPL HELPER</h1>
+        {!selectedFunction && <Function onSubmit={handleFunctionSubmit} />}
 
-      {/* Step 2: Select Team */}
-      {selectedFunction && !selectedTeams.length && (
-        <Team onSubmit={handleTeamSubmit} />
-      )}
+        {selectedFunction && !selectedTeams.length && (
+          <Team onSubmit={handleTeamSubmit} />
+        )}
 
-      {/* Step 3: Progress Table */}
-      {selectedFunction && selectedTeams.length > 0 && (
-        <Main data={progressData} />
-      )}
-    </div>
+        {selectedFunction && selectedTeams.length > 0 && (
+          <Main func={selectedFunction} teams={selectedTeams} />
+        )}
+      </div>
+    </SocketContext.Provider>
   );
 };
 
