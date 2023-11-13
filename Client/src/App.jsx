@@ -3,7 +3,7 @@ import Function from "./pages/Function";
 import Team from "./pages/Team";
 import Main from "./pages/app/main";
 import socket from "./service/socketio";
-import { SocketContext } from "./service/socketcontext";
+import { SocketContext } from "./service/socketContext";
 
 const App = () => {
   const [selectedFunction, setSelectedFunction] = useState(null);
@@ -22,7 +22,6 @@ const App = () => {
   return (
     <SocketContext.Provider value={socket}>
       <div>
-        <h1>AWPL HELPER</h1>
         {!selectedFunction && <Function onSubmit={handleFunctionSubmit} />}
 
         {selectedFunction && !selectedTeams.length && (
