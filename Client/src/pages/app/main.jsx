@@ -3,6 +3,7 @@ import DataTable from "./DataTable";
 import MenuBar from "./MenuBar";
 import MineTable from "./MineTable";
 import Terminal from "./Terminal";
+import "./index.css";
 import { SocketContext } from "../../service/socketContext";
 
 const main = ({ func, teams }) => {
@@ -25,8 +26,9 @@ const main = ({ func, teams }) => {
         style={{
           display: "flex",
           flexDirection: "row",
-          width: "100%",
+          width: "calc(100% - 20px)",
           height: "100%",
+          margin: "0 10px 10px 10px",
         }}
       >
         <DataTable />
