@@ -9,6 +9,10 @@ const App = () => {
   const [selectedFunction, setSelectedFunction] = useState(null);
   const [selectedTeams, setSelectedTeams] = useState([]);
 
+  const goBack = () => {
+    window.history.back();
+  };
+
   const handleFunctionSubmit = (selectedFunction) => {
     console.log(selectedFunction);
     setSelectedFunction(selectedFunction);

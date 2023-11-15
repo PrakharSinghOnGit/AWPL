@@ -18,6 +18,7 @@ const Menubar = ({ func, leader, progress, output }) => {
         borderRadius: "10px",
         fontFamily: "Roboto",
         fontSize: "10px",
+        backgroundColor: "white",
       }}
     >
       <h1>{func}</h1>

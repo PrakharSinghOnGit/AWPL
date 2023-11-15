@@ -6,6 +6,7 @@ const DataTable = () => {
       className="section"
       style={{
         borderRadius: "10px 0 0 10px",
+        backgroundColor: "white",
       }}
     ></div>
   );

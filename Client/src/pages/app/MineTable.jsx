@@ -6,6 +6,7 @@ const MineTable = () => {
       className="section"
       style={{
         margin: "0 10px",
+        backgroundColor: "white",
       }}
     ></div>
   );

@@ -19,6 +19,12 @@ io.on("connection", (socket) => {
     console.log(`Received "SEND TEAMS" request from client`);
     socket.emit("teams", getTeams());
   });
+
+  socket.on("commands", ({ func, teams }) => {
+    console.log(`Received "Commands" from client`);
+    console.log(`Function: ${func}`);
+    console.log(`Team: ${teams}`);
+  });
 });
 
 function getTeams() {

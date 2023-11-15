@@ -7,6 +7,8 @@ import "./index.css";
 import { SocketContext } from "../../service/socketContext";
 
 const main = ({ func, teams }) => {
+  const socket = React.useContext(SocketContext);
+  socket.emit("commands", { func, teams });
   return (
     <div
       style={{
@@ -14,6 +16,7 @@ const main = ({ func, teams }) => {
         flexDirection: "column",
         width: "100%",
         height: "100vh",
+        backgroundColor: "aliceblue",
       }}
     >
       <MenuBar

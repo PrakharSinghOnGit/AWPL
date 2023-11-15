@@ -27,22 +27,38 @@ function Team({ onSubmit }) {
   };
 
   return (
-    <div>
-      <h1>Select Options</h1>
-      {options.map((option) => (
-        <div key={option.name}>
-          <input
-            type="checkbox"
-            id={option.name}
-            name={option.name}
-            value={option.name}
-            checked={selectedOptions.includes(option)}
-            onChange={() => handleOptionSelect(option)}
-          />
-          <label htmlFor={option.name}>{option.name}</label>
+    <div className="con">
+      <div className="box">
+        <h1>Select Teams</h1>
+        <div className="wrapper">
+          {options.map((option) => (
+            <div
+              className={
+                option.status == "active"
+                  ? "checkboxCon"
+                  : "checkboxCon disabled"
+              }
+              key={option.name}
+            >
+              <input
+                type="checkbox"
+                id={option.name}
+                name={option.name}
+                value={option.name}
+                checked={selectedOptions.includes(option)}
+                onChange={() => handleOptionSelect(option)}
+              />
+              <label htmlFor={option.name}>
+                <div className="tick_mark"></div>
+              </label>
+              <h2 onClick={() => handleOptionSelect(option)}>{option.name}</h2>
+            </div>
+          ))}
         </div>
-      ))}
-      <button onClick={handleSubmit}>Submit</button>
+      </div>
+      <button className="Submitbtn" onClick={handleSubmit}>
+        Submit
+      </button>
     </div>
   );
 }

@@ -6,6 +6,7 @@ const Terminal = () => {
       className="section"
       style={{
         borderRadius: "0 10px 10px 0",
+        backgroundColor: "white",
       }}
     ></div>
   );
