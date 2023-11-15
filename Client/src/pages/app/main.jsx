@@ -1,14 +1,18 @@
-import React from "react";
+import React, { useEffect } from "react";
 import DataTable from "./DataTable";
 import MenuBar from "./MenuBar";
 import MineTable from "./MineTable";
 import Terminal from "./Terminal";
 import "./index.css";
 import { SocketContext } from "../../service/socketContext";
+import fetchData from "../../service/fetchData";
 
 const main = ({ func, teams }) => {
   const socket = React.useContext(SocketContext);
-  socket.emit("commands", { func, teams });
+  const [data, setData] = React.useState([]);
+  useEffect(() => {
+    setData(fetchData(teams[0].name));
+  }, []);
   return (
     <div
       style={{
