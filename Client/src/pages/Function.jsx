@@ -30,7 +30,7 @@ const Function = ({ onSubmit }) => {
               checked={selectedOptions.includes("LEVEL")}
               onChange={() => handleOptionSelect("LEVEL")}
             />
-            <label for="_level">
+            <label htmlFor="_level">
               <div className="tick_mark"></div>
             </label>
             <h2 onClick={() => handleOptionSelect("LEVEL")}>LEVEL</h2>
@@ -42,7 +42,7 @@ const Function = ({ onSubmit }) => {
               checked={selectedOptions.includes("TARGET")}
               onChange={() => handleOptionSelect("TARGET")}
             />
-            <label for="_target">
+            <label htmlFor="_target">
               <div className="tick_mark"></div>
             </label>
             <h2 onClick={() => handleOptionSelect("TARGET")}>TARGET</h2>
@@ -54,7 +54,7 @@ const Function = ({ onSubmit }) => {
               checked={selectedOptions.includes("CHEQUE")}
               onChange={() => handleOptionSelect("CHEQUE")}
             />
-            <label for="_cheque">
+            <label htmlFor="_cheque">
               <div className="tick_mark"></div>
             </label>
             <h2 onClick={() => handleOptionSelect("CHEQUE")}>CHEQUE</h2>

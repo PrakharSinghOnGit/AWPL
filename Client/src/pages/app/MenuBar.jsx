@@ -9,23 +9,25 @@ const Menubar = ({ func, leader, progress, output }) => {
         display: "flex",
         flexDirection: "row",
         justifyContent: "space-around",
-        width: "calc(100% - 20px)",
+        alignItems: "center",
+        width: "calc(100% - 40px)",
         height: "60px",
-        borderColor: "red",
+        borderColor: "lightblue",
         borderWidth: "1px",
         borderStyle: "solid",
         margin: "10px",
         borderRadius: "10px",
-        fontFamily: "Roboto",
-        fontSize: "10px",
         backgroundColor: "white",
+        padding: "0 10px",
       }}
     >
-      <h1>{func}</h1>
-      <span>||</span>
-      <h1>{leader}</h1>
+      <h1 className="heading">{func}</h1>
+      <h1 style={{ fontWeight: 500 }} className="heading">
+        {leader}
+      </h1>
+      <p style={{ fontFamily: "cascadia code", padding: 10 }}>{progress}%</p>
       <ProgressBar percentage={progress} />
-      <h2>{output}</h2>
+      <h2 className="status">{output}</h2>
     </div>
   );
 };
