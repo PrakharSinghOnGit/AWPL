@@ -1,8 +1,8 @@
 import React from "react";
 import ProgressBar from "./Components/ProgressBar";
 
-const Menubar = ({ func, leader, progress, output }) => {
-  console.log(func, leader, progress, output);
+const Menubar = ({ func, leader, progress }) => {
+  console.log(func, leader, progress);
   return (
     <div
       style={{
@@ -27,7 +27,6 @@ const Menubar = ({ func, leader, progress, output }) => {
       </h1>
       <p style={{ fontFamily: "cascadia code", padding: 10 }}>{progress}%</p>
       <ProgressBar percentage={progress} />
-      <h2 className="status">{output}</h2>
     </div>
   );
 };
