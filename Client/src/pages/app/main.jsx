@@ -5,13 +5,20 @@ import MineTable from "./MineTable";
 import Terminal from "./Terminal";
 import "./index.css";
 import { SocketContext } from "../../service/socketContext";
-import fetchData from "../../service/fetchData";
+import { csvToJson } from "../../service/csvToJson";
 
 const main = ({ func, teams }) => {
   const socket = React.useContext(SocketContext);
   const [data, setData] = React.useState([]);
   useEffect(() => {
-    setData(fetchData(teams[0].name));
+    async function fetchData(link) {
+      const response = await fetch(link);
+      const csvData = await response.text();
+      const jsonData = csvToJson(csvData);
+      socket.emit("mine", { data: jsonData, func: func });
+      setData(jsonData);
+    }
+    fetchData(teams[0].link);
   }, []);
   return (
     <div
@@ -33,7 +40,7 @@ const main = ({ func, teams }) => {
           margin: "0 10px 10px 10px",
         }}
       >
-        <DataTable />
+        <DataTable team={data} />
         <MineTable />
         <Terminal />
       </div>

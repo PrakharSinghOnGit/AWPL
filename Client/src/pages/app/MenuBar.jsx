@@ -19,6 +19,7 @@ const Menubar = ({ func, leader, progress }) => {
         borderRadius: "10px",
         backgroundColor: "white",
         padding: "0 10px",
+        userSelect: "none",
       }}
     >
       <h1 className="heading">{func}</h1>

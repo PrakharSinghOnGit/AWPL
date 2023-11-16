@@ -4,22 +4,17 @@ const FILE_SYSTEM = require("fs");
 const { Cluster } = require("puppeteer-cluster");
 const PUPPETEER = require("puppeteer-extra");
 const STEALTH_PLUGIN = require("puppeteer-extra-plugin-stealth");
-const COLORS = require("colors");
-const Spinnies = require("spinnies");
 
 // Assigning Constants
 const WrongPass = [];
 PUPPETEER.use(STEALTH_PLUGIN());
 const SLEEP = (duration) =>
   new Promise((resolve) => setTimeout(resolve, duration));
-const Load = new Spinnies({
-  succeedPrefix: "✔",
-});
 const Setting = JSON.parse(FILE_SYSTEM.readFileSync("./Settings.json"));
 const LEVELS = Setting.Miner.Levels;
 
-async function MINER(DATA, FUNCTION) {
-  let Ticker = DATA.length;
+async function MINER(DATA, FUNCTION, SOCKET) {
+  console.log("MINER STARTED", DATA.length);
   const cluster = await Cluster.launch({
     // browser Launch Properties
     concurrency: Cluster.CONCURRENCY_CONTEXT, // Incognito Pages gor each Worker
@@ -37,21 +32,12 @@ async function MINER(DATA, FUNCTION) {
   cluster.on("taskerror", async (err, { name, pass, id }) => {
     // Error Handling
     if (WrongPass.includes(id)) return;
-    if (Load.checkIfActiveSpinners(id)) {
-      Load.update(id, {
-        text: `${COLORS.red.bold(name)} : ${err.message.toString()}`,
-        spinnerColor: "red",
-      });
-    }
     cluster.queue({ id: id, pass: pass, name: name });
   });
   const LEVEL_OUT = [];
   const TARGET_OUT = [];
   const CHEQUE_OUT = [];
   await cluster.task(async ({ page, data: { id, pass, name } }) => {
-    Load.add(id, {
-      text: COLORS.yellow(name) + COLORS.magenta("Mining Data : "),
-    });
     // Fetching Data
     await page.setRequestInterception(true); // Not Loading FONT and IMAGE
     page.on("request", (req) => {
@@ -60,20 +46,26 @@ async function MINER(DATA, FUNCTION) {
       else req.continue();
     });
     // ---------------------- Calling Awpl Functions Accordingly ----------------------
-    if (Ticker == 0) {
-      FILE_SYSTEM.writeFileSync("TEST.json", JSON.stringify(LEVEL_OUT));
-      return LEVEL_OUT;
-    }
+
     await LOGIN(page, id, pass, name);
-    if (FUNCTION.includes("LEVEL DATA")) {
+    if (FUNCTION.includes("LEVEL")) {
       var data = await LEVEL(page, name, id);
-      Ticker--;
+      console.log(
+        "LEVEL DATA",
+        data.name,
+        data.level,
+        data.remainsaosp,
+        data.remainsgosp
+      );
       if (data == 0) {
-        Load.fail(id, {
-          text: `${COLORS.red.bold(name)} : ${COLORS.dim("FAILED")}`,
-        });
         // check if LEVEL_OUT aleardy has an object with same name
         // if (LEVEL_OUT.includes(data.name)) return;
+        SOCKET.emit("LEVEL", {
+          name: name,
+          level: "-",
+          remainsaosp: "-",
+          remainsgosp: "-",
+        });
         LEVEL_OUT.push({
           name: name,
           level: "-",
@@ -81,21 +73,14 @@ async function MINER(DATA, FUNCTION) {
           remainsgosp: "-",
         });
       } else {
-        Load.succeed(id, {
-          text: `${COLORS.green.bold(name)} : ${COLORS.dim("SUCCESS")} : ${
-            data.level
-          } ${data.remainsaosp} ${data.remainsgosp}`,
-        });
+        SOCKET.emit("LEVEL", data);
         LEVEL_OUT.push(data); // push data to output
       }
     }
-    if (FUNCTION.includes("TARGET DATA")) {
+    if (FUNCTION.includes("TARGET")) {
       Ticker--;
       var data = await TARGET(page, name, id);
       if (data == 0) {
-        Load.fail(id, {
-          text: `${COLORS.red.bold(name)} : ${COLORS.dim("FAILED")}`,
-        });
         if (LEVEL_OUT.includes(data.name)) return;
         TARGET_OUT.push({
           name: name,
@@ -104,17 +89,11 @@ async function MINER(DATA, FUNCTION) {
           remainsgosp: "-",
         });
       } else {
-        Load.succeed(id, {
-          text: `${COLORS.green.bold(name)} : ${COLORS.dim("SUCCESS")}`,
-        });
         TARGET_OUT.push(data); // push data to output
       }
     }
-    if (FUNCTION.includes("CHEQUE DATA")) {
+    if (FUNCTION.includes("CHEQUE")) {
       var data = await CHEQUE(page, name, id);
-      Load.succeed(id, {
-        text: `${COLORS.green("SUCCESS")} : ${COLORS.yellow(name)}`,
-      });
       CHEQUE_OUT.push(data); // push data to output
     }
   });
@@ -124,6 +103,8 @@ async function MINER(DATA, FUNCTION) {
   }
   await cluster.idle(); // closing when done
   await cluster.close(); // closing when done
+  FILE_SYSTEM.writeFileSync("TEST.json", JSON.stringify(LEVEL_OUT));
+  return LEVEL_OUT;
 }
 async function LEVEL(PAGE, NAME, ID) {
   if (WrongPass.includes(ID)) return 0;
@@ -133,13 +114,6 @@ async function LEVEL(PAGE, NAME, ID) {
       "_self"
     )
   );
-  Load.update(ID, {
-    text:
-      COLORS.yellow.bold(NAME) +
-      " :" +
-      COLORS.dim.magenta(" Opening Level Page : "),
-    spinnerColor: "magenta",
-  });
   await PAGE.waitForNavigation({ waitUntil: "networkidle2" });
   await SLEEP(1000);
   const targetdata = await PAGE.evaluate(() => {
@@ -181,15 +155,8 @@ async function LOGIN(PAGE, ID, PASS, NAME) {
       .message()
       .toString()
       .replace(/(\r\n|\n|\r)/gm, "");
-    Load.fail(ID, {
-      text: `${COLORS.red.bold(NAME)} : ${COLORS.dim(dialogMessage)}`,
-    });
     WrongPass.push(ID);
     dialog.dismiss();
-  });
-  Load.update(ID, {
-    text: COLORS.yellow.bold(NAME) + " :" + COLORS.dim(" Logging in : "),
-    spinnerColor: "yellow",
   });
   await PAGE.goto(
     `https://asclepiuswellness.com/userpanel/uservalidationnew.aspx?memberid=${ID.replace(
@@ -198,18 +165,12 @@ async function LOGIN(PAGE, ID, PASS, NAME) {
     )}&pwd=${PASS.replace(/\W/g, "")}`,
     { waitUntil: "networkidle2" }
   );
+  console.log("LOGGED IN", NAME);
   return;
 }
 async function TARGET(PAGE, NAME, ID) {
   if (WrongPass.includes(ID)) return 0;
   const pending = new PendingXHR(PAGE);
-  Load.update(ID, {
-    text:
-      COLORS.yellow.bold(NAME) +
-      " :" +
-      COLORS.dim.cyan(" Opening Target Page : "),
-    spinnerColor: "cyan",
-  });
   await PAGE.evaluate(
     (URL) => window.open(URL, "_self"),
     Setting.Miner.TargetURL
@@ -246,10 +207,6 @@ async function TARGET(PAGE, NAME, ID) {
       remainsgosp: remainsgosp,
     };
   } catch (error) {
-    Load.fail(ID, {
-      text:
-        COLORS.yellow.red(NAME) + " :" + COLORS.red(" EMPTY TARGET PAGE : "),
-    });
     return {
       name: NAME,
       level: "-",

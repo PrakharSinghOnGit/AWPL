@@ -7,7 +7,7 @@ export function csvToJson(csvData) {
     const obj = {};
     const currentLine = lines[i].split(",");
     for (let j = 0; j < headers.length; j++) {
-      obj[headers[j]] = currentLine[j].toString().toUpperCase();
+      obj[headers[j].trim()] = currentLine[j].toString().toUpperCase().trim();
     }
     result.push(obj);
   }

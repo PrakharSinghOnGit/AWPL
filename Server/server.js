@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const miner = require("./functions/miner.js");
 const config = JSON.parse(
   fs.readFileSync(path.resolve(__dirname, "config.json"), "utf8")
 );
@@ -15,15 +16,14 @@ io.on("connection", (socket) => {
     console.log("disconnected from client", socket.id);
   });
 
-  socket.on("sendTeams", (data) => {
+  socket.on("sendTeams", () => {
     console.log(`Received "SEND TEAMS" request from client`);
     socket.emit("teams", getTeams());
   });
 
-  socket.on("commands", ({ func, teams }) => {
-    console.log(`Received "Commands" from client`);
-    console.log(`Function: ${func}`);
-    console.log(`Team: ${teams}`);
+  socket.on("mine", ({ data, func }) => {
+    console.log(`Received "MINE" request from client`);
+    miner(data, func, socket);
   });
 });
 
