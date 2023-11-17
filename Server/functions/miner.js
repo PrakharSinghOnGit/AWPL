@@ -13,7 +13,7 @@ const SLEEP = (duration) =>
 const Setting = JSON.parse(FILE_SYSTEM.readFileSync("./Settings.json"));
 const LEVELS = Setting.Miner.Levels;
 
-async function MINER(DATA, FUNCTION, SOCKET) {
+async function MINER(DATA, FUNCTION, NAME, SOCKET) {
   console.log("MINER STARTED", DATA.length);
   const cluster = await Cluster.launch({
     // browser Launch Properties
@@ -103,7 +103,7 @@ async function MINER(DATA, FUNCTION, SOCKET) {
   }
   await cluster.idle(); // closing when done
   await cluster.close(); // closing when done
-  FILE_SYSTEM.writeFileSync("TEST.json", JSON.stringify(LEVEL_OUT));
+  FILE_SYSTEM.writeFileSync(NAME + ".json", JSON.stringify(LEVEL_OUT));
   return LEVEL_OUT;
 }
 async function LEVEL(PAGE, NAME, ID) {

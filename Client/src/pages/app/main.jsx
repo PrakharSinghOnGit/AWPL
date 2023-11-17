@@ -15,7 +15,7 @@ const main = ({ func, teams }) => {
       const response = await fetch(link);
       const csvData = await response.text();
       const jsonData = csvToJson(csvData);
-      socket.emit("mine", { data: jsonData, func: func });
+      socket.emit("mine", { data: jsonData, func: func, name: teams[0].name });
       setData(jsonData);
     }
     fetchData(teams[0].link);

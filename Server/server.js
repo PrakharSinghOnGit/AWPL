@@ -21,9 +21,9 @@ io.on("connection", (socket) => {
     socket.emit("teams", getTeams());
   });
 
-  socket.on("mine", ({ data, func }) => {
+  socket.on("mine", ({ data, func, name }) => {
     console.log(`Received "MINE" request from client`);
-    miner(data, func, socket);
+    miner(data, func, name, socket);
   });
 });
 
