@@ -20,7 +20,7 @@ const MineTable = () => {
       socket.off("LEVEL", handleLevelEvent);
     };
   }, []);
-
+  let serialNumber = 1; // initialize serial number variable
   return (
     <div
       className="section"
@@ -29,18 +29,20 @@ const MineTable = () => {
         backgroundColor: "white",
       }}
     >
-      <table>
-        <thead>
+      <table className="table">
+        <thead className="thead">
           <tr>
-            <th>Name</th>
-            <th>Level</th>
-            <th>SAO SP</th>
-            <th>SGO SP</th>
+            <th>SNO</th>
+            <th>NAME</th>
+            <th>LEVEL</th>
+            <th>SAO</th>
+            <th>SGO</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="tbody">
           {tableData.map((data, index) => (
             <tr key={index}>
+              <td>{serialNumber++}</td>
               <td>{data.name}</td>
               <td>{data.level}</td>
               <td>{data.remainsaosp}</td>

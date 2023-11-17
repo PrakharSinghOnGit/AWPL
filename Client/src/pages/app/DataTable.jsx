@@ -2,6 +2,7 @@ import React from "react";
 
 const DataTable = ({ team }) => {
   console.log(team);
+  let serialNumber = 1; // initialize serial number variable
   return (
     <div
       className="section"
@@ -10,18 +11,20 @@ const DataTable = ({ team }) => {
         backgroundColor: "white",
       }}
     >
-      <table>
-        <thead>
+      <table className="table">
+        <thead className="thead">
           <tr>
+            <th>SNO</th>
             <th>Name</th>
             <th>ID</th>
-            <th>Password</th>
+            <th>PASS</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="tbody">
           {Array.isArray(team) &&
             team.map((item) => (
-              <tr key={item.id}>
+              <tr className="tr" key={item.id}>
+                <td>{serialNumber++}</td>
                 <td>{item.name}</td>
                 <td>{item.id}</td>
                 <td>{item.pass}</td>

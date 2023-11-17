@@ -1,7 +1,9 @@
 .section {
   width: 100%;
-  height: 100%;
+  height: calc(100vh - 93px);
+  padding: 10px;
   border: 1px solid lightblue;
+  overflow: scroll;
 }
 
 .heading {
@@ -23,4 +25,33 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.table {
+  width: 100%;
+}
+
+.thead {
+  font-size: 22px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  text-align: left;
+}
+
+.thead th {
+  padding: 5px;
+}
+
+.tbody {
+  font-size: 18px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.tr:hover {
+  background-color: aliceblue;
+}
+
+.tr td {
+  padding: 3px;
+  border-bottom: 1px solid lightblue;
+  border-left: 1px solid blue;
 }
