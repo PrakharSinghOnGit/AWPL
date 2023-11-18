@@ -23,7 +23,7 @@ io.on("connection", (socket) => {
 
   socket.on("mine", ({ data, func, name }) => {
     console.log(`Received "MINE" request from client`);
-    // miner(data, func, name, socket);
+    miner(data, func, name, socket);
   });
 });
 
