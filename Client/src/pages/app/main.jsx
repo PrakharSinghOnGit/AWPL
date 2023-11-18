@@ -30,7 +30,7 @@ const main = ({ func, teams }) => {
         backgroundColor: "aliceblue",
       }}
     >
-      <MenuBar func={func[0]} leader={teams[0].name} progress={50} />
+      <MenuBar func={func[0]} leader={teams[0].name} />
       <div
         style={{
           display: "flex",

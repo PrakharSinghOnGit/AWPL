@@ -1,8 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
 import ProgressBar from "./Components/ProgressBar";
+import { SocketContext } from "../../service/socketContext";
 
-const Menubar = ({ func, leader, progress }) => {
-  console.log(func, leader, progress);
+const Menubar = ({ func, leader }) => {
+  const socket = React.useContext(SocketContext);
+  const [progress, setProgress] = React.useState(0);
+  useEffect(() => {
+    socket.on("progress", () => {
+      setProgress((prevProgress) => prevProgress + 1);
+    });
+
+    return () => {
+      socket.off("progress");
+    };
+  });
+  console.log(func, leader);
   return (
     <div
       style={{
