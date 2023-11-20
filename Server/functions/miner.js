@@ -87,7 +87,13 @@ async function MINER(DATA, FUNCTION, NAME, SOCKET) {
       Ticker--;
       var data = await TARGET(page, name, id);
       if (data == 0) {
-        if (LEVEL_OUT.includes(data.name)) return;
+        // if (LEVEL_OUT.includes(data.name)) return;
+        SOCKET.emit("TARGET", {
+          name: name,
+          level: "-",
+          remainsaosp: "-",
+          remainsgosp: "-",
+        });
         TARGET_OUT.push({
           name: name,
           level: "-",
@@ -95,6 +101,12 @@ async function MINER(DATA, FUNCTION, NAME, SOCKET) {
           remainsgosp: "-",
         });
       } else {
+        SOCKET.emit("TARGET", {
+          name: name,
+          level: "-",
+          remainsaosp: "-",
+          remainsgosp: "-",
+        });
         TARGET_OUT.push(data); // push data to output
       }
     }
