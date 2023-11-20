@@ -29,6 +29,8 @@ const Level = () => {
         backgroundColor: "white",
       }}
     >
+      <h1 className="section-title">LEVEL DATA</h1>
+
       <table className="table">
         <thead className="thead">
           <tr>

@@ -55,3 +55,9 @@
   border-bottom: 1px solid lightblue;
   border-left: 1px solid blue;
 }
+
+.section-title {
+  text-align: center;
+  font-size: 26px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
