@@ -15,6 +15,9 @@ const Function = ({ onSubmit }) => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    if (selectedOptions.length === 0) {
+      return;
+    }
     onSubmit(selectedOptions);
   };
 
