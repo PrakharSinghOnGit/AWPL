@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { SocketContext } from "../../service/socketContext";
 
-const Terminal = () => {
+const Target = () => {
   const socket = React.useContext(SocketContext);
   const [messages, setMessages] = React.useState([]);
 
@@ -30,4 +30,4 @@ const Terminal = () => {
   );
 };
 
-export default Terminal;
+export default Target;

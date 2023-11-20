@@ -20,7 +20,7 @@ const LEVELS = Setting.Miner.Levels;
 exports.LEVELS = LEVELS;
 
 async function MINER(DATA, FUNCTION, NAME, SOCKET) {
-  console.log("MINER STARTED", DATA.length);
+  console.log("MINER STARTED", DATA.length, FUNCTION, NAME);
   const cluster = await Cluster.launch({
     // browser Launch Properties
     concurrency: Cluster.CONCURRENCY_CONTEXT, // Incognito Pages gor each Worker

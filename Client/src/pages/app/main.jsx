@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import DataTable from "./DataTable";
 import MenuBar from "./MenuBar";
-import MineTable from "./MineTable";
-import Terminal from "./Terminal";
+import Level from "./Level";
+import Target from "./Target";
 import "./index.css";
 import { SocketContext } from "../../service/socketContext";
 import { csvToJson } from "../../service/csvToJson";
@@ -53,8 +53,8 @@ const main = ({ func, teams }) => {
         }}
       >
         <DataTable team={data} />
-        <MineTable />
-        <Terminal />
+        <Level />
+        <Target />
       </div>
     </div>
   );

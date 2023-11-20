@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { SocketContext } from "../../service/socketContext";
 
-const MineTable = () => {
+const Level = () => {
   const socket = React.useContext(SocketContext);
   const [tableData, setTableData] = useState([]);
 
@@ -55,4 +55,4 @@ const MineTable = () => {
   );
 };
 
-export default MineTable;
+export default Level;
