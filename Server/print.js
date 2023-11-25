@@ -7,7 +7,7 @@ const { log } = require("console");
 const files = require("fs").readdirSync("./json");
 
 (async () => {
-  // await MakeJsons();
+  await MakeJsons();
   log("Jsons Made");
   await Print();
 })();

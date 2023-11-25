@@ -2,22 +2,14 @@ const FILE_SYSTEM = require("fs");
 const { Cluster } = require("puppeteer-cluster");
 const PUPPETEER = require("puppeteer-extra");
 const STEALTH_PLUGIN = require("puppeteer-extra-plugin-stealth");
-const { LEVEL } = require("./LEVEL");
-const { TARGET } = require("./TARGET");
-const { CHEQUE } = require("./CHEQUE");
-const { LOGIN } = require("./LOGIN");
 
 // Assigning Constants
 const WrongPass = [];
-exports.WrongPass = WrongPass;
 PUPPETEER.use(STEALTH_PLUGIN());
 const SLEEP = (duration) =>
   new Promise((resolve) => setTimeout(resolve, duration));
-exports.SLEEP = SLEEP;
 const Setting = JSON.parse(FILE_SYSTEM.readFileSync("./Settings.json"));
-exports.Setting = Setting;
 const LEVELS = Setting.Miner.Levels;
-exports.LEVELS = LEVELS;
 
 async function MINER(DATA, FUNCTION, NAME, SOCKET) {
   console.log("MINER STARTED", DATA.length, FUNCTION, NAME);
@@ -83,37 +75,37 @@ async function MINER(DATA, FUNCTION, NAME, SOCKET) {
         LEVEL_OUT.push(data); // push data to output
       }
     }
-    if (FUNCTION.includes("TARGET")) {
-      Ticker--;
-      var data = await TARGET(page, name, id);
-      if (data == 0) {
-        // if (LEVEL_OUT.includes(data.name)) return;
-        SOCKET.emit("TARGET", {
-          name: name,
-          level: "-",
-          remainsaosp: "-",
-          remainsgosp: "-",
-        });
-        TARGET_OUT.push({
-          name: name,
-          level: "-",
-          remainsaosp: "-",
-          remainsgosp: "-",
-        });
-      } else {
-        SOCKET.emit("TARGET", {
-          name: name,
-          level: "-",
-          remainsaosp: "-",
-          remainsgosp: "-",
-        });
-        TARGET_OUT.push(data); // push data to output
-      }
-    }
-    if (FUNCTION.includes("CHEQUE")) {
-      var data = await CHEQUE(page, name, id);
-      CHEQUE_OUT.push(data); // push data to output
-    }
+    // if (FUNCTION.includes("TARGET")) {
+    //   Ticker--;
+    //   var data = await TARGET(page, name, id);
+    //   if (data == 0) {
+    //     // if (LEVEL_OUT.includes(data.name)) return;
+    //     SOCKET.emit("TARGET", {
+    //       name: name,
+    //       level: "-",
+    //       remainsaosp: "-",
+    //       remainsgosp: "-",
+    //     });
+    //     TARGET_OUT.push({
+    //       name: name,
+    //       level: "-",
+    //       remainsaosp: "-",
+    //       remainsgosp: "-",
+    //     });
+    //   } else {
+    //     SOCKET.emit("TARGET", {
+    //       name: name,
+    //       level: "-",
+    //       remainsaosp: "-",
+    //       remainsgosp: "-",
+    //     });
+    //     TARGET_OUT.push(data); // push data to output
+    //   }
+    // }
+    // if (FUNCTION.includes("CHEQUE")) {
+    //   var data = await CHEQUE(page, name, id);
+    //   CHEQUE_OUT.push(data); // push data to output
+    // }
   });
   for (let i = 0; i < DATA.length; i++) {
     // calling Fetch for every Member
@@ -123,5 +115,63 @@ async function MINER(DATA, FUNCTION, NAME, SOCKET) {
   await cluster.close(); // closing when done
   FILE_SYSTEM.writeFileSync(NAME + ".json", JSON.stringify(LEVEL_OUT));
   return LEVEL_OUT;
+}
+async function LOGIN(PAGE, ID, PASS, NAME) {
+  PAGE.on("dialog", async (dialog) => {
+    WrongPass.push(ID);
+    dialog.dismiss();
+  });
+  await PAGE.goto(
+    `https://asclepiuswellness.com/userpanel/uservalidationnew.aspx?memberid=${ID.replace(
+      /\W/g,
+      ""
+    )}&pwd=${PASS.replace(/\W/g, "")}`,
+    { waitUntil: "networkidle2" }
+  );
+  console.log("LOGGED IN", NAME);
+  return;
+}
+async function LEVEL(PAGE, NAME, ID) {
+  if (WrongPass.includes(ID)) return 0;
+  await PAGE.evaluate(() =>
+    window.open(
+      "https://asclepiuswellness.com/userpanel/LevelPandingListNew.aspx",
+      "_self"
+    )
+  );
+  await PAGE.waitForNavigation({ waitUntil: "networkidle2" });
+  await SLEEP(1000);
+  const targetdata = await PAGE.evaluate(() => {
+    let i = 2;
+    while (
+      document.querySelector(
+        "#ctl00_ContentPlaceHolder1_GVPanding > tbody > tr:nth-child(" +
+          i +
+          ") > td:nth-child(9)"
+      ).textContent != "Pending"
+    ) {
+      i++;
+    }
+    return [
+      document.querySelector(
+        "#ctl00_ContentPlaceHolder1_GVPanding > tbody > tr:nth-child(" +
+          i +
+          ") > td:nth-child(7)"
+      ).textContent,
+      document.querySelector(
+        "#ctl00_ContentPlaceHolder1_GVPanding > tbody > tr:nth-child(" +
+          i +
+          ") > td:nth-child(8)"
+      ).textContent,
+      i,
+    ];
+  });
+  var data = {
+    name: NAME,
+    level: LEVELS[targetdata[2] - 2].toUpperCase(),
+    remainsaosp: Number(targetdata[0]).toFixed(),
+    remainsgosp: Number(targetdata[1]).toFixed(),
+  };
+  return data;
 }
 module.exports = MINER;
