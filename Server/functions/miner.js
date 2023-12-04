@@ -1,14 +1,18 @@
 const FILE_SYSTEM = require("fs");
+const path = require("path");
 const { Cluster } = require("puppeteer-cluster");
 const PUPPETEER = require("puppeteer-extra");
 const STEALTH_PLUGIN = require("puppeteer-extra-plugin-stealth");
+const { PendingXHR } = require("pending-xhr-puppeteer");
 
 // Assigning Constants
 const WrongPass = [];
 PUPPETEER.use(STEALTH_PLUGIN());
 const SLEEP = (duration) =>
   new Promise((resolve) => setTimeout(resolve, duration));
-const Setting = JSON.parse(FILE_SYSTEM.readFileSync("./Settings.json"));
+const Setting = JSON.parse(
+  FILE_SYSTEM.readFileSync(path.join(__dirname, "../Settings.json"))
+);
 const LEVELS = Setting.Miner.Levels;
 
 async function MINER(DATA, FUNCTION, NAME, SOCKET) {
@@ -74,38 +78,31 @@ async function MINER(DATA, FUNCTION, NAME, SOCKET) {
         SOCKET.emit("LEVEL", data);
         LEVEL_OUT.push(data); // push data to output
       }
+      FILE_SYSTEM.writeFileSync(
+        path.join(__dirname, "../json/" + NAME + ".json"),
+        JSON.stringify(LEVEL_OUT)
+      );
     }
-    // if (FUNCTION.includes("TARGET")) {
-    //   Ticker--;
-    //   var data = await TARGET(page, name, id);
-    //   if (data == 0) {
-    //     // if (LEVEL_OUT.includes(data.name)) return;
-    //     SOCKET.emit("TARGET", {
-    //       name: name,
-    //       level: "-",
-    //       remainsaosp: "-",
-    //       remainsgosp: "-",
-    //     });
-    //     TARGET_OUT.push({
-    //       name: name,
-    //       level: "-",
-    //       remainsaosp: "-",
-    //       remainsgosp: "-",
-    //     });
-    //   } else {
-    //     SOCKET.emit("TARGET", {
-    //       name: name,
-    //       level: "-",
-    //       remainsaosp: "-",
-    //       remainsgosp: "-",
-    //     });
-    //     TARGET_OUT.push(data); // push data to output
-    //   }
-    // }
-    // if (FUNCTION.includes("CHEQUE")) {
-    //   var data = await CHEQUE(page, name, id);
-    //   CHEQUE_OUT.push(data); // push data to output
-    // }
+    if (FUNCTION.includes("TARGET")) {
+      var data = await TARGET(page, name, id);
+      console.log(
+        "Target DATA",
+        data.name,
+        data.level,
+        data.remainsaosp,
+        data.remainsgosp
+      );
+      SOCKET.emit("TARGET", data);
+      TARGET_OUT.push(data); // push data to output
+      FILE_SYSTEM.writeFileSync(
+        path.join(__dirname, "../json/" + NAME + ".json"),
+        JSON.stringify(TARGET_OUT)
+      );
+    }
+    if (FUNCTION.includes("CHEQUE")) {
+      var data = await CHEQUE(page, name, id);
+      CHEQUE_OUT.push(data); // push data to output
+    }
   });
   for (let i = 0; i < DATA.length; i++) {
     // calling Fetch for every Member
@@ -113,7 +110,6 @@ async function MINER(DATA, FUNCTION, NAME, SOCKET) {
   }
   await cluster.idle(); // closing when done
   await cluster.close(); // closing when done
-  FILE_SYSTEM.writeFileSync(NAME + ".json", JSON.stringify(LEVEL_OUT));
   return LEVEL_OUT;
 }
 async function LOGIN(PAGE, ID, PASS, NAME) {
@@ -173,5 +169,53 @@ async function LEVEL(PAGE, NAME, ID) {
     remainsgosp: Number(targetdata[1]).toFixed(),
   };
   return data;
+}
+async function TARGET(PAGE, NAME, ID) {
+  if (WrongPass.includes(ID)) return 0;
+  const pending = new PendingXHR(PAGE);
+  await PAGE.evaluate(
+    (URL) => window.open(URL, "_self"),
+    Setting.Miner.TargetURL
+  );
+  await PAGE.waitForNavigation({ waitUntil: "networkidle2" });
+  await SLEEP(1000);
+  try {
+    await pending.waitForAllXhrFinished();
+    let level = await PAGE.evaluate(() =>
+      document
+        .querySelector(
+          "#ctl00_ContentPlaceHolder1_CustomersGridView > tbody > tr:nth-child(2) > td:nth-child(2)"
+        )
+        .textContent.replace(" DS", "")
+        .toUpperCase()
+    );
+    let remainsaosp = await PAGE.evaluate(() =>
+      Number(
+        document.querySelector(
+          "#ctl00_ContentPlaceHolder1_CustomersGridView > tbody > tr:nth-child(2) > td:nth-child(5)"
+        ).textContent
+      ).toFixed()
+    );
+    let remainsgosp = await PAGE.evaluate(() =>
+      Number(
+        document.querySelector(
+          "#ctl00_ContentPlaceHolder1_CustomersGridView > tbody > tr:nth-child(2) > td:nth-child(6)"
+        ).textContent
+      ).toFixed()
+    );
+    return {
+      name: NAME,
+      level: level,
+      remainsaosp: remainsaosp,
+      remainsgosp: remainsgosp,
+    };
+  } catch (error) {
+    return {
+      name: NAME,
+      level: "-",
+      remainsaosp: "-",
+      remainsgosp: "-",
+    };
+  }
 }
 module.exports = MINER;

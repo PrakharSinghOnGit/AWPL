@@ -29,7 +29,7 @@
         "Timeout": 30000,
         "SameDomainDelay": 1000,
         "MaxConcurrency": 10,
-        "TargetURL": "https://www.asclepiuswellness.com/userpanel/UserMansoonJulyBonanzaNew.aspx",
+        "TargetURL": "https://www.asclepiuswellness.com/userpanel/UserMonsoonGoaBonanza.aspx",
         "Debug" : false,
         "Levels" : [
             "FRESHER",

@@ -16,11 +16,30 @@ async function MakeJsons() {
   files.forEach(async (file) => {
     const data = JSON.parse(fs.readFileSync(`./json/${file}`));
     let SortedLevelData = await SortData(data);
-    let levelHtml = MakeHtml(SortedLevelData, "SP", file.replace(".json", ""));
-    fs.writeFileSync(
-      "./html/" + file.replace(".json", "") + ".html",
-      levelHtml
-    );
+    if (file.includes("LEVEL")) {
+      console.log("LEVEL DATA PRINTING", file.replace(".json", ""));
+      let levelHtml = MakeHtml(
+        SortedLevelData,
+        "SP",
+        file.replace(".json", "")
+      );
+      fs.writeFileSync(
+        "./html/" + file.replace(".json", "") + ".html",
+        levelHtml
+      );
+    } else if (file.includes("TARGET")) {
+      console.log("TARGET DATA PRINTING", file.replace(".json", ""));
+      let targetHtml = MakeHtml(
+        SortedLevelData,
+        "SP",
+        file.replace(".json", ""),
+        true
+      );
+      fs.writeFileSync(
+        "./html/" + file.replace(".json", "") + ".html",
+        targetHtml
+      );
+    }
   });
 }
 
@@ -53,7 +72,7 @@ async function SortData(DATA) {
   return sortedData;
 }
 
-function MakeHtml(DATA, TYPE, FILENAME) {
+function MakeHtml(DATA, TYPE, FILENAME, removeEmpty = false) {
   const style = `<style id="style">
   @page{margin: 0mm;}
   * {color: ${Setting.print.HeadingColor};
@@ -95,12 +114,14 @@ function MakeHtml(DATA, TYPE, FILENAME) {
   let rows = "";
   if (TYPE === "SP") {
     for (let i = 0; i < DATA.length; i++) {
-      let row = `<tr><td>${i + 1}</td>
-            <td class="a">${DATA[i].name}</td>
-            <td class="c">${DATA[i].level}</td>
-            <td class="d">${DATA[i].remainsaosp}</td>
-            <td class="e">${DATA[i].remainsgosp}</td></tr>`;
-      rows = rows + row;
+      if (DATA[i].level != "-" && removeEmpty) {
+        let row = `<tr><td>${i + 1}</td>
+        <td class="a">${DATA[i].name}</td>
+        <td class="c">${DATA[i].level}</td>
+        <td class="d">${DATA[i].remainsaosp}</td>
+        <td class="e">${DATA[i].remainsgosp}</td></tr>`;
+        rows = rows + row;
+      }
     }
     headers = `<th>SAO</th><th>SGO</th>`;
   } else {
