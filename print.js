@@ -24,7 +24,7 @@ async function MakeJsons() {
         file.replace(".json", "")
       );
       fs.writeFileSync(
-        "./html/" + file.replace(".json", "") + ".html",
+        "./html/" + file.replace(".json", "") + "LEVEL DATA.html",
         levelHtml
       );
     } else if (file.includes("TARGET")) {
@@ -36,7 +36,7 @@ async function MakeJsons() {
         true
       );
       fs.writeFileSync(
-        "./html/" + file.replace(".json", "") + ".html",
+        "./html/" + file.replace(".json", "") + "TARGET DATA.html",
         targetHtml
       );
     }
