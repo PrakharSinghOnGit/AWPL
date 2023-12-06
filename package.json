@@ -30,9 +30,7 @@
     "pending-xhr-puppeteer": "^2.3.3",
     "puppeteer-cluster": "^0.23.0",
     "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "socket.io": "^4.7.2",
-    "spinnies": "^0.5.1"
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
