@@ -1,5 +1,5 @@
 const fs = require("fs");
-const Setting = JSON.parse(fs.readFileSync("./Settings.json"));
+const Setting = JSON.parse(fs.readFileSync("./config.json"));
 const LEVELS = Setting.Miner.Levels;
 const child_process = require("child_process");
 const chromium = require("chromium");

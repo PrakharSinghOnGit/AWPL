@@ -1,5 +1,5 @@
 const FILE_SYSTEM = require("fs");
-const Setting = JSON.parse(FILE_SYSTEM.readFileSync("./Settings.json"));
+const Setting = JSON.parse(FILE_SYSTEM.readFileSync("./config.json"));
 
 async function MakeHtml(DATA, TYPE, FILENAME) {
   const style = `<style id="style">

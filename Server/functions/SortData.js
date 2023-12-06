@@ -1,5 +1,5 @@
 const FILE_SYSTEM = require("fs");
-const Setting = JSON.parse(FILE_SYSTEM.readFileSync("./Settings.json"));
+const Setting = JSON.parse(FILE_SYSTEM.readFileSync("./config.json"));
 const LEVELS = Setting.Miner.Levels;
 
 async function SortData(DATA) {

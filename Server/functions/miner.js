@@ -11,7 +11,7 @@ PUPPETEER.use(STEALTH_PLUGIN());
 const SLEEP = (duration) =>
   new Promise((resolve) => setTimeout(resolve, duration));
 const Setting = JSON.parse(
-  FILE_SYSTEM.readFileSync(path.join(__dirname, "../Settings.json"))
+  FILE_SYSTEM.readFileSync(path.join(__dirname, "../config.json"))
 );
 const LEVELS = Setting.Miner.Levels;
 
