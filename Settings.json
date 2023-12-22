@@ -28,9 +28,9 @@
   "Miner": {
     "Timeout": 30000,
     "SameDomainDelay": 1000,
-    "MaxConcurrency": 1,
-    "TargetURL": "https://www.asclepiuswellness.com/userpanel/UserMansoonJulyBonanzaNew.aspx",
-    "Debug": true,
+    "MaxConcurrency": 12,
+    "TargetURL": "https://www.asclepiuswellness.com/userpanel/UserMonsoonGoaBonanza.aspx",
+    "Debug": false,
     "Levels": [
       "FRESHER",
       "BRONZE",

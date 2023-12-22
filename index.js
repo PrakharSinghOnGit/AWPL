@@ -1,11 +1,13 @@
-const { MultiSelect } = require("enquirer");
+const PATH = require("path");
+const axios = require("axios");
+const csv = require("csvtojson");
 const FILE_SYSTEM = require("fs");
-const { Cluster } = require("puppeteer-cluster");
+const { MultiSelect } = require("enquirer");
 const PUPPETEER = require("puppeteer-extra");
-const STEALTH_PLUGIN = require("puppeteer-extra-plugin-stealth");
+const { Cluster } = require("puppeteer-cluster");
 const { PendingXHR } = require("pending-xhr-puppeteer");
-const path = require("path");
-const Setting = require(path.join(__dirname, "./Settings.json"));
+const STEALTH_PLUGIN = require("puppeteer-extra-plugin-stealth");
+const Setting = require(PATH.join(__dirname, "./Settings.json"));
 
 const WrongPass = [];
 PUPPETEER.use(STEALTH_PLUGIN());
@@ -13,6 +15,16 @@ const SLEEP = (duration) =>
   new Promise((resolve) => setTimeout(resolve, duration));
 const LEVELS = Setting.Miner.Levels;
 
+async function getTeam(url) {
+  try {
+    const response = await axios.get(url);
+    const jsonData = await csv().fromString(response.data);
+    return jsonData;
+  } catch (error) {
+    console.error("Error:", error);
+    return null;
+  }
+}
 function outDirHandler() {
   if (!FILE_SYSTEM.existsSync(PATH.join(__dirname, "./out")))
     FILE_SYSTEM.mkdirSync(PATH.join(__dirname, "./out"));
@@ -104,6 +116,7 @@ async function TARGET(PAGE, NAME, ID) {
         ).textContent
       ).toFixed()
     );
+    console.log(level);
     return {
       name: NAME,
       level: level,
@@ -135,6 +148,7 @@ async function LOGIN(PAGE, ID, PASS, NAME) {
   return;
 }
 async function MINER(DATA, FUNCTION, NAME) {
+  console.log("MINER STARTED", NAME, DATA.length);
   const cluster = await Cluster.launch({
     // browser Launch Properties
     concurrency: Cluster.CONCURRENCY_CONTEXT, // Incognito Pages gor each Worker
@@ -178,8 +192,6 @@ async function MINER(DATA, FUNCTION, NAME) {
         data.remainsgosp
       );
       if (data == 0) {
-        // check if LEVEL_OUT aleardy has an object with same name
-        // if (LEVEL_OUT.includes(data.name)) return;
         LEVEL_OUT.push({
           name: name,
           level: "-",
@@ -188,11 +200,11 @@ async function MINER(DATA, FUNCTION, NAME) {
         });
       } else {
         LEVEL_OUT.push(data); // push data to output
+        FILE_SYSTEM.writeFileSync(
+          PATH.join(__dirname, "./json/" + NAME + " LEVEL DATA.json"),
+          JSON.stringify(LEVEL_OUT)
+        );
       }
-      FILE_SYSTEM.writeFileSync(
-        path.join(__dirname, "../json/" + NAME + ".json"),
-        JSON.stringify(LEVEL_OUT)
-      );
     }
     if (FUNCTION.includes("TARGET")) {
       var data = await TARGET(page, name, id);
@@ -205,7 +217,7 @@ async function MINER(DATA, FUNCTION, NAME) {
       );
       TARGET_OUT.push(data); // push data to output
       FILE_SYSTEM.writeFileSync(
-        path.join(__dirname, "../json/" + NAME + ".json"),
+        PATH.join(__dirname, "./json/" + NAME + " TARGET DATA.json"),
         JSON.stringify(TARGET_OUT)
       );
     }
@@ -246,7 +258,10 @@ async function START() {
     })
     .catch(console.error);
 
-  console.log(func, Users);
+  for (u of Users) {
+    const data = await getTeam(Setting.Users[u]);
+    await MINER(data, func, u);
+  }
 }
 
 START();

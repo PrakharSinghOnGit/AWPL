@@ -1,5 +1,5 @@
 const fs = require("fs");
-const Setting = JSON.parse(fs.readFileSync("./config.json"));
+const Setting = JSON.parse(fs.readFileSync("./Settings.json"));
 const LEVELS = Setting.Miner.Levels;
 const child_process = require("child_process");
 const chromium = require("chromium");
@@ -7,8 +7,7 @@ const { log } = require("console");
 const files = require("fs").readdirSync("./json");
 
 (async () => {
-  await MakeJsons();
-  log("Jsons Made");
+  // await MakeJsons();
   await Print();
 })();
 
@@ -24,7 +23,7 @@ async function MakeJsons() {
         file.replace(".json", "")
       );
       fs.writeFileSync(
-        "./html/" + file.replace(".json", "") + "LEVEL DATA.html",
+        "./html/" + file.replace(".json", "") + ".html",
         levelHtml
       );
     } else if (file.includes("TARGET")) {
@@ -36,7 +35,7 @@ async function MakeJsons() {
         true
       );
       fs.writeFileSync(
-        "./html/" + file.replace(".json", "") + "TARGET DATA.html",
+        "./html/" + file.replace(".json", "") + ".html",
         targetHtml
       );
     }
@@ -114,14 +113,14 @@ function MakeHtml(DATA, TYPE, FILENAME, removeEmpty = false) {
   let rows = "";
   if (TYPE === "SP") {
     for (let i = 0; i < DATA.length; i++) {
-      if (DATA[i].level != "-" && removeEmpty) {
-        let row = `<tr><td>${i + 1}</td>
+      // if (DATA[i].level != "-" && removeEmpty) {
+      let row = `<tr><td>${i + 1}</td>
         <td class="a">${DATA[i].name}</td>
         <td class="c">${DATA[i].level}</td>
         <td class="d">${DATA[i].remainsaosp}</td>
         <td class="e">${DATA[i].remainsgosp}</td></tr>`;
-        rows = rows + row;
-      }
+      rows = rows + row;
+      // }
     }
     headers = `<th>SAO</th><th>SGO</th>`;
   } else {
