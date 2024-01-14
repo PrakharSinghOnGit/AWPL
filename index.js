@@ -2,44 +2,26 @@ const PATH = require("path");
 const axios = require("axios");
 const csv = require("csvtojson");
 const FILE_SYSTEM = require("fs");
+const SPINNIES = require("spinnies");
+const COLORS = require("ansi-colors");
 const { MultiSelect } = require("enquirer");
 const PUPPETEER = require("puppeteer-extra");
 const { Cluster } = require("puppeteer-cluster");
 const { PendingXHR } = require("pending-xhr-puppeteer");
 const STEALTH_PLUGIN = require("puppeteer-extra-plugin-stealth");
+const cliWidth = require("cli-width");
 const Setting = require(PATH.join(__dirname, "./Settings.json"));
 
+const terminator = () => console.log(COLORS.dim("-=").repeat(cliWidth() / 2));
 const WrongPass = [];
+const spinner = new SPINNIES({
+  succeedPrefix: "✔",
+  failPrefix: "✖",
+});
 PUPPETEER.use(STEALTH_PLUGIN());
 const SLEEP = (duration) =>
   new Promise((resolve) => setTimeout(resolve, duration));
 const LEVELS = Setting.Miner.Levels;
-
-async function getTeam(url) {
-  try {
-    const response = await axios.get(url);
-    const jsonData = await csv().fromString(response.data);
-    return jsonData;
-  } catch (error) {
-    console.error("Error:", error);
-    return null;
-  }
-}
-function outDirHandler() {
-  if (!FILE_SYSTEM.existsSync(PATH.join(__dirname, "./out")))
-    FILE_SYSTEM.mkdirSync(PATH.join(__dirname, "./out"));
-  var out = FILE_SYSTEM.readdirSync(PATH.join(__dirname, "./out")).filter(
-    (el) => (el != "json" ? el : "")
-  );
-  try {
-    out.forEach((el) => {
-      FILE_SYSTEM.unlinkSync(PATH.join(__dirname, "./out", el));
-    });
-  } catch (error) {
-    log(COLORS.red("ERROR : Please Close File to continue !"));
-    process.exit(0);
-  }
-}
 async function LEVEL(PAGE, NAME, ID) {
   if (WrongPass.includes(ID)) return 0;
   await PAGE.evaluate(() =>
@@ -116,7 +98,6 @@ async function TARGET(PAGE, NAME, ID) {
         ).textContent
       ).toFixed()
     );
-    console.log(level);
     return {
       name: NAME,
       level: level,
@@ -132,6 +113,142 @@ async function TARGET(PAGE, NAME, ID) {
     };
   }
 }
+async function CHEQUE(PAGE, NAME) {
+  if (WrongPass.includes(ID)) return 0;
+  const pending = new PendingXHR(PAGE);
+  await PAGE.evaluate(() =>
+    window.open(
+      "https://asclepiuswellness.com/userpanel/UserLevelNew.aspx",
+      "_self"
+    )
+  );
+  await PAGE.waitForNavigation({ waitUntil: "networkidle2" });
+  const sleep = (duration) =>
+    new Promise((resolve) => setTimeout(resolve, duration));
+  await PAGE.evaluate(() => {
+    let d = new Date();
+    const pad = function (nbr) {
+      return nbr < 10 ? "0" + nbr : nbr;
+    };
+    var omb =
+      pad(d.getDate()) +
+      "/" +
+      pad(d.getMonth() == 0 ? "12" : d.getMonth()) +
+      "/" +
+      (d.getMonth() == 0 ? d.getFullYear() - 1 : d.getFullYear());
+    document.querySelector("#ctl00_ContentPlaceHolder1_txtFrom").value = omb;
+  });
+  await PAGE.click("#ctl00_ContentPlaceHolder1_btnshow");
+  try {
+    await pending.waitForAllXhrFinished();
+    await PAGE.waitForSelector(
+      "#ctl00_ContentPlaceHolder1_gvIncome > tbody > tr:nth-child(1) > th:nth-child(1)"
+    );
+    await sleep(1000);
+    await PAGE.evaluate(() => {
+      var table = document.querySelector("table");
+      var data = [];
+      var headers = [];
+      for (var i = 0; i < table.rows[0].cells.length; i++) {
+        headers[i] = table.rows[0].cells[i].innerHTML
+          .toLowerCase()
+          .replace(/ /gi, "");
+      }
+      for (var i = 1; i < table.rows.length; i++) {
+        var tableRow = table.rows[i];
+        var rowData = {};
+        for (var j = 0; j < tableRow.cells.length; j++) {
+          rowData[headers[j]] = tableRow.cells[j].innerHTML;
+        }
+        data.push(rowData);
+      }
+      for (let i = 0; i < data.length; i++) {
+        if (data[i].status == "Pending") {
+          data = data[i];
+        }
+      }
+      let d = [];
+      data.forEach((el) => {
+        d.push({ payDate: el.paydate.substr(0, 5), amount: el.totalamount });
+      });
+      var div = document.createElement("div");
+      div.id = "myCustomDiv";
+      div.innerText = JSON.stringify(d);
+      document.querySelector("body").appendChild(div);
+    });
+    var RawData = JSON.parse(
+      await PAGE.evaluate(
+        () => document.querySelector("#myCustomDiv").innerText
+      )
+    );
+  } catch (e) {
+    var RawData = [];
+  }
+  await PAGE.evaluate(() =>
+    window.open(
+      "https://asclepiuswellness.com/userpanel/LevelPandingListNew.aspx",
+      "_self"
+    )
+  );
+  await PAGE.waitForNavigation({ waitUntil: "networkidle2" });
+  await sleep(1000);
+  await PAGE.evaluate(() => {
+    var table = document.querySelector("table");
+    var data = [];
+    var headers = [];
+    for (var i = 0; i < table.rows[0].cells.length; i++) {
+      headers[i] = table.rows[0].cells[i].innerHTML
+        .toLowerCase()
+        .replace(/ /gi, "");
+    }
+    for (var i = 1; i < table.rows.length; i++) {
+      var tableRow = table.rows[i];
+      var rowData = {};
+      for (var j = 0; j < tableRow.cells.length; j++) {
+        rowData[headers[j]] = tableRow.cells[j].innerHTML;
+      }
+      data.push(rowData);
+    }
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].status == "Pending") {
+        data = data[i];
+      }
+    }
+    const levels = [
+      "Fresher",
+      "Bronze",
+      "Silver",
+      "Gold",
+      "Platinum",
+      "Emerald",
+      "Topaz",
+      "Ruby Star",
+      "Sapphire",
+      "Star Sapphire",
+      "Diamond",
+      "Blue Diamond",
+      "Black Diamond",
+      "Royal Diamond",
+      "Crown Diamond",
+      "Ambassador",
+      "Royal Ambassador",
+      "Crown Ambassador",
+      "Brand Ambassador",
+    ];
+    var div = document.createElement("div");
+    div.id = "myCustomDiv";
+    div.innerText = levels[Number(data.step) - 1].toUpperCase();
+    document.querySelector("body").appendChild(div);
+  });
+  var level = await PAGE.evaluate(
+    () => document.querySelector("#myCustomDiv").innerText
+  );
+  return {
+    name: NAME,
+    data: RawData,
+    level: level,
+  };
+}
 async function LOGIN(PAGE, ID, PASS, NAME) {
   PAGE.on("dialog", async (dialog) => {
     WrongPass.push(ID);
@@ -144,11 +261,10 @@ async function LOGIN(PAGE, ID, PASS, NAME) {
     )}&pwd=${PASS.replace(/\W/g, "")}`,
     { waitUntil: "networkidle2" }
   );
-  console.log("LOGGED IN", NAME);
+  // console.log("LOGGED IN", NAME);
   return;
 }
 async function MINER(DATA, FUNCTION, NAME) {
-  console.log("MINER STARTED", NAME, DATA.length);
   const cluster = await Cluster.launch({
     // browser Launch Properties
     concurrency: Cluster.CONCURRENCY_CONTEXT, // Incognito Pages gor each Worker
@@ -166,6 +282,7 @@ async function MINER(DATA, FUNCTION, NAME) {
   cluster.on("taskerror", async (_err, { name, pass, id }) => {
     // Error Handling
     if (WrongPass.includes(id)) return;
+    spinner.fail(id, { text: name + " : " + COLORS.redBright.bold("FAILED") });
     cluster.queue({ id: id, pass: pass, name: name });
   });
   const LEVEL_OUT = [];
@@ -181,16 +298,27 @@ async function MINER(DATA, FUNCTION, NAME) {
     });
     // ---------------------- Calling Awpl Functions Accordingly ----------------------
 
+    spinner.add(id, { text: name + " " + COLORS.yellow("Logging") });
     await LOGIN(page, id, pass, name);
+    spinner.add(id, { text: name + " " + COLORS.green.bold("Logged") });
     if (FUNCTION.includes("LEVEL")) {
+      spinner.add(id, {
+        text:
+          name +
+          " : " +
+          COLORS.green.bold("Logged") +
+          " : " +
+          COLORS.yellow("Leveling"),
+      });
       var data = await LEVEL(page, name, id);
-      console.log(
-        "LEVEL DATA",
-        data.name,
-        data.level,
-        data.remainsaosp,
-        data.remainsgosp
-      );
+      spinner.add(id, {
+        text:
+          name +
+          " : " +
+          COLORS.green.bold("Logged") +
+          " : " +
+          COLORS.green.bold("Leveled"),
+      });
       if (data == 0) {
         LEVEL_OUT.push({
           name: name,
@@ -207,14 +335,27 @@ async function MINER(DATA, FUNCTION, NAME) {
       }
     }
     if (FUNCTION.includes("TARGET")) {
+      spinner.add(id, {
+        text:
+          name +
+          " : " +
+          COLORS.green.bold("Logged") +
+          " : " +
+          COLORS.green.bold("Leveled") +
+          " : " +
+          COLORS.yellow("Targeting"),
+      });
       var data = await TARGET(page, name, id);
-      console.log(
-        "Target DATA",
-        data.name,
-        data.level,
-        data.remainsaosp,
-        data.remainsgosp
-      );
+      spinner.add(id, {
+        text:
+          name +
+          " : " +
+          COLORS.green.bold("Logged") +
+          " : " +
+          COLORS.green.bold("Leveled") +
+          " : " +
+          COLORS.green.bold("Targeted"),
+      });
       TARGET_OUT.push(data); // push data to output
       FILE_SYSTEM.writeFileSync(
         PATH.join(__dirname, "./json/" + NAME + " TARGET DATA.json"),
@@ -222,9 +363,12 @@ async function MINER(DATA, FUNCTION, NAME) {
       );
     }
     if (FUNCTION.includes("CHEQUE")) {
+      console.log();
       var data = await CHEQUE(page, name, id);
+      console.log("CHEQUE DATA", data.name, data.level, data.data);
       CHEQUE_OUT.push(data); // push data to output
     }
+    spinner.succeed(id);
   });
   for (let i = 0; i < DATA.length; i++) {
     // calling Fetch for every Member
@@ -235,7 +379,8 @@ async function MINER(DATA, FUNCTION, NAME) {
   return LEVEL_OUT;
 }
 async function START() {
-  outDirHandler();
+  console.clear();
+  terminator();
   const func = await new MultiSelect({
     name: "function",
     message: "SELECT FUNCTION",
@@ -257,10 +402,26 @@ async function START() {
       return answer;
     })
     .catch(console.error);
-
   for (u of Users) {
-    const data = await getTeam(Setting.Users[u]);
-    await MINER(data, func, u);
+    terminator();
+    spinner.add("teamFetch", {
+      color: "yellow",
+      text: `FETCHING TEAM OF ${COLORS.yellow.bold(u)}`,
+    });
+    try {
+      const response = await axios.get(Setting.Users[u]);
+      const data = await csv().fromString(response.data);
+      spinner.succeed("teamFetch", {
+        text: `${COLORS.magenta.bold(u)} : ${COLORS.yellow.bold(data.length)}`,
+      });
+      await MINER(data, func, u);
+    } catch (error) {
+      spinner.fail("teamFetch", {
+        text: `FETCHING FAIL : ${COLORS.red.bold(u)}`,
+      });
+      process.exit(0);
+      return null;
+    }
   }
 }
 
