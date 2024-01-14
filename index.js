@@ -15,7 +15,7 @@ const Setting = require(PATH.join(__dirname, "./Settings.json"));
 const terminator = () => console.log(COLORS.dim("-=").repeat(cliWidth() / 2));
 const WrongPass = [];
 const spinner = new SPINNIES({
-  succeedPrefix: "✔",
+  succeedPrefix: " ",
   failPrefix: "✖",
 });
 PUPPETEER.use(STEALTH_PLUGIN());
@@ -261,10 +261,20 @@ async function LOGIN(PAGE, ID, PASS, NAME) {
     )}&pwd=${PASS.replace(/\W/g, "")}`,
     { waitUntil: "networkidle2" }
   );
-  // console.log("LOGGED IN", NAME);
   return;
 }
 async function MINER(DATA, FUNCTION, NAME) {
+  let longestName = NAME;
+  for (let i = 0; i < DATA.length; i++) {
+    if (DATA[i].name.length > longestName.length) {
+      longestName = DATA[i].name;
+    }
+  }
+  spinner.succeed("fetch", {
+    text: COLORS.bold.white(`┏━━━━┳━${"━".repeat(longestName.length)}━┓
+  ┃ ${COLORS.orange(DATA.length)} ┃ ${COLORS.magenta(longestName)} ┃
+  ┠────╂─${"─".repeat(longestName.length)}─┨`),
+  });
   const cluster = await Cluster.launch({
     // browser Launch Properties
     concurrency: Cluster.CONCURRENCY_CONTEXT, // Incognito Pages gor each Worker
@@ -281,8 +291,8 @@ async function MINER(DATA, FUNCTION, NAME) {
   });
   cluster.on("taskerror", async (_err, { name, pass, id }) => {
     // Error Handling
-    if (WrongPass.includes(id)) return;
     spinner.fail(id, { text: name + " : " + COLORS.redBright.bold("FAILED") });
+    if (WrongPass.includes(id)) return;
     cluster.queue({ id: id, pass: pass, name: name });
   });
   const LEVEL_OUT = [];
@@ -297,27 +307,24 @@ async function MINER(DATA, FUNCTION, NAME) {
       else req.continue();
     });
     // ---------------------- Calling Awpl Functions Accordingly ----------------------
-
-    spinner.add(id, { text: name + " " + COLORS.yellow("Logging") });
     await LOGIN(page, id, pass, name);
-    spinner.add(id, { text: name + " " + COLORS.green.bold("Logged") });
+    let paddedName = name.padEnd(longestName.length);
+    spinner.add(id, {
+      text: `┃ ${COLORS.cyan.bold(paddedName)} ┃ ${COLORS.green.bold(
+        "Logged"
+      )} ┃`,
+    });
     if (FUNCTION.includes("LEVEL")) {
       spinner.add(id, {
-        text:
-          name +
-          " : " +
-          COLORS.green.bold("Logged") +
-          " : " +
-          COLORS.yellow("Leveling"),
+        text: `┃ ${COLORS.cyan.bold(paddedName)} ┃ ${COLORS.red.bold(
+          "LEVEL "
+        )} ┃`,
       });
       var data = await LEVEL(page, name, id);
       spinner.add(id, {
-        text:
-          name +
-          " : " +
-          COLORS.green.bold("Logged") +
-          " : " +
-          COLORS.green.bold("Leveled"),
+        text: `┃ ${COLORS.cyan.bold(paddedName)} ┃ ${COLORS.green.bold(
+          "LEVEL "
+        )} ┃`,
       });
       if (data == 0) {
         LEVEL_OUT.push({
@@ -336,25 +343,15 @@ async function MINER(DATA, FUNCTION, NAME) {
     }
     if (FUNCTION.includes("TARGET")) {
       spinner.add(id, {
-        text:
-          name +
-          " : " +
-          COLORS.green.bold("Logged") +
-          " : " +
-          COLORS.green.bold("Leveled") +
-          " : " +
-          COLORS.yellow("Targeting"),
+        text: `┃ ${COLORS.cyan.bold(paddedName)} ┃ ${COLORS.red.bold(
+          "TARGET"
+        )} ┃`,
       });
       var data = await TARGET(page, name, id);
       spinner.add(id, {
-        text:
-          name +
-          " : " +
-          COLORS.green.bold("Logged") +
-          " : " +
-          COLORS.green.bold("Leveled") +
-          " : " +
-          COLORS.green.bold("Targeted"),
+        text: `┃ ${COLORS.cyan.bold(paddedName)} ┃ ${COLORS.green.bold(
+          "TARGET"
+        )} ┃`,
       });
       TARGET_OUT.push(data); // push data to output
       FILE_SYSTEM.writeFileSync(
@@ -363,20 +360,35 @@ async function MINER(DATA, FUNCTION, NAME) {
       );
     }
     if (FUNCTION.includes("CHEQUE")) {
-      console.log();
+      spinner.add(id, {
+        text: `┃ ${COLORS.cyan.bold(paddedName)} ┃ ${COLORS.red.bold(
+          "LEVEL "
+        )} ┃`,
+      });
       var data = await CHEQUE(page, name, id);
-      console.log("CHEQUE DATA", data.name, data.level, data.data);
+      spinner.add(id, {
+        text: `┃ ${COLORS.cyan.bold(paddedName)} ┃ ${COLORS.green.bold(
+          "CHEQUE"
+        )} ┃`,
+      });
       CHEQUE_OUT.push(data); // push data to output
     }
-    spinner.succeed(id);
+    spinner.succeed(id, {
+      text: `┃ ${COLORS.green.bold(paddedName)} ┃ ${COLORS.green.bold(
+        "DONE "
+      )}`,
+    });
   });
   for (let i = 0; i < DATA.length; i++) {
-    // calling Fetch for every Member
+    // ┏┳┓┣━╋┫┗┻┛━┃
+    let paddedName = DATA[i].name.padEnd(longestName.length);
+    spinner.add(DATA[i].id, {
+      text: `┃ ${COLORS.cyan.bold(paddedName)} ┃`,
+    });
     cluster.queue(DATA[i]);
   }
   await cluster.idle(); // closing when done
   await cluster.close(); // closing when done
-  return LEVEL_OUT;
 }
 async function START() {
   console.clear();
@@ -404,19 +416,26 @@ async function START() {
     .catch(console.error);
   for (u of Users) {
     terminator();
-    spinner.add("teamFetch", {
+    spinner.add("fetch", {
       color: "yellow",
       text: `FETCHING TEAM OF ${COLORS.yellow.bold(u)}`,
     });
     try {
       const response = await axios.get(Setting.Users[u]);
       const data = await csv().fromString(response.data);
-      spinner.succeed("teamFetch", {
-        text: `${COLORS.magenta.bold(u)} : ${COLORS.yellow.bold(data.length)}`,
+      const UpperCasedData = data.map((item) => {
+        const modifiedItem = {};
+        for (const key in item) {
+          if (Object.hasOwnProperty.call(item, key)) {
+            modifiedItem[key] = item[key].toUpperCase();
+          }
+        }
+        return modifiedItem;
       });
-      await MINER(data, func, u);
+      await MINER(UpperCasedData, func, u);
     } catch (error) {
-      spinner.fail("teamFetch", {
+      console.error(error);
+      spinner.fail("fetch", {
         text: `FETCHING FAIL : ${COLORS.red.bold(u)}`,
       });
       process.exit(0);
