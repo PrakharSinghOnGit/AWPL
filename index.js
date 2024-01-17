@@ -11,8 +11,7 @@ const { PendingXHR } = require("pending-xhr-puppeteer");
 const STEALTH_PLUGIN = require("puppeteer-extra-plugin-stealth");
 const cliWidth = require("cli-width");
 const Setting = require(PATH.join(__dirname, "./Settings.json"));
-
-const terminator = () => console.log(COLORS.dim("-=").repeat(cliWidth() / 2));
+const terminator = () => console.log(COLORS.dim("-=").repeat(cliWidth() / 4));
 const WrongPass = [];
 const spinner = new SPINNIES({
   succeedPrefix: " ",
@@ -22,8 +21,108 @@ PUPPETEER.use(STEALTH_PLUGIN());
 const SLEEP = (duration) =>
   new Promise((resolve) => setTimeout(resolve, duration));
 const LEVELS = Setting.Miner.Levels;
+let headTheme = {
+  0: function (msg) {
+    return chalk.hex("#FFFD82")(msg);
+  },
+  1: function (msg) {
+    return chalk.hex("#FF9B71")(msg);
+  },
+  2: function (msg) {
+    return chalk.hex("#1B998B")(msg);
+  },
+  3: function (msg) {
+    return chalk.hex("#8DCB87")(msg);
+  },
+  4: function (msg) {
+    return chalk.hex("#FFCC7A")(msg);
+  },
+  5: function (msg) {
+    return chalk.hex("#52528C")(msg);
+  },
+  6: function (msg) {
+    return chalk.hex("#FEE1C7")(msg);
+  },
+};
+let statusTheme = {
+  QUEUED: function (msg) {
+    return chalk.hex("#7C9EB2")(msg);
+  },
+  LOGING: function (msg) {
+    return chalk.hex("#E1AA7D")(msg);
+  },
+  LOADIN: function (msg) {
+    return chalk.hex("#52DEE5")(msg);
+  },
+  SUCCES: function (msg) {
+    return chalk.hex("#09BC8A")(msg);
+  },
+  "ERROR ": function (msg) {
+    return chalk.hex("#F40000")(msg);
+  },
+};
+function TABLE(DATA, FUNCTION, NAME) {
+  console.clear();
+  let longestName = NAME;
+  for (let i = 0; i < DATA.length; i++) {
+    if (DATA[i].name.length > longestName.length) {
+      longestName = DATA[i].name;
+    }
+  }
+  let theads = [
+    DATA.length,
+    NAME.padEnd(longestName.length),
+    "USER ID",
+    "PASS",
+    ...FUNCTION,
+  ];
+  // ┏ ┳ ┓ ┣ ╋ ┫ ┗ ┛ ┻ ━ ┃
+  let preHeader = `┏`;
+  let header = `┃ `;
+  let postHeader = `┣`;
+  theads.forEach((ele, i) => {
+    preHeader = preHeader + "━".repeat(ele.toString().length + 2) + "┳";
+    header = header + headTheme[i](ele) + " ┃ ";
+    postHeader = postHeader + "━".repeat(ele.toString().length + 2) + "╋";
+  });
+  preHeader = preHeader.slice(0, -1) + "┓";
+  postHeader = postHeader.slice(0, -1) + "┫";
+  log(preHeader + "\n");
+  log(chalk.bold(header) + "\n");
+  log(postHeader + "\n");
+  for (let i = 0; i < DATA.length; i++) {
+    let Status = FUNCTION.map((ele) =>
+      DATA[i][ele] ? DATA[i][ele] : "QUEUED"
+    );
+    let tdata = [
+      (i + 1).toString().padStart(2),
+      DATA[i].name.padEnd(longestName.length),
+      DATA[i].id.padEnd(7),
+      DATA[i].pass.length > 4 ? DATA[i].pass.substr(0, 2) + "•➜" : DATA[i].pass,
+      ...Status,
+    ];
+    let row = `┃ `;
+    tdata.forEach((ele, i) => {
+      if (statusTheme[ele]?.call) {
+        row = row + statusTheme[ele](ele) + " ┃ ";
+        return;
+      }
+      row = row + headTheme[i](ele) + " ┃ ";
+    });
+    log(row + "\n");
+  }
+  log(
+    postHeader.replaceAll("╋", "┻").replace("┣", "┗").replace("┫", "┛") + "\n"
+  );
+}
 async function LEVEL(PAGE, NAME, ID) {
-  if (WrongPass.includes(ID)) return 0;
+  if (WrongPass.includes(ID))
+    return {
+      name: NAME,
+      level: "-",
+      remainsaosp: "-",
+      remainsgosp: "-",
+    };
   await PAGE.evaluate(() =>
     window.open(
       "https://asclepiuswellness.com/userpanel/LevelPandingListNew.aspx",
@@ -66,7 +165,13 @@ async function LEVEL(PAGE, NAME, ID) {
   return data;
 }
 async function TARGET(PAGE, NAME, ID) {
-  if (WrongPass.includes(ID)) return 0;
+  if (WrongPass.includes(ID))
+    return {
+      name: NAME,
+      level: "-",
+      remainsaosp: "-",
+      remainsgosp: "-",
+    };
   const pending = new PendingXHR(PAGE);
   await PAGE.evaluate(
     (URL) => window.open(URL, "_self"),
@@ -249,7 +354,7 @@ async function CHEQUE(PAGE, NAME) {
     level: level,
   };
 }
-async function LOGIN(PAGE, ID, PASS, NAME) {
+async function LOGIN(PAGE, ID, PASS) {
   PAGE.on("dialog", async (dialog) => {
     WrongPass.push(ID);
     dialog.dismiss();
@@ -264,17 +369,6 @@ async function LOGIN(PAGE, ID, PASS, NAME) {
   return;
 }
 async function MINER(DATA, FUNCTION, NAME) {
-  let longestName = NAME;
-  for (let i = 0; i < DATA.length; i++) {
-    if (DATA[i].name.length > longestName.length) {
-      longestName = DATA[i].name;
-    }
-  }
-  spinner.succeed("fetch", {
-    text: COLORS.bold.white(`┏━━━━┳━${"━".repeat(longestName.length)}━┓
-  ┃ ${COLORS.orange(DATA.length)} ┃ ${COLORS.magenta(longestName)} ┃
-  ┠────╂─${"─".repeat(longestName.length)}─┨`),
-  });
   const cluster = await Cluster.launch({
     // browser Launch Properties
     concurrency: Cluster.CONCURRENCY_CONTEXT, // Incognito Pages gor each Worker
@@ -291,7 +385,10 @@ async function MINER(DATA, FUNCTION, NAME) {
   });
   cluster.on("taskerror", async (_err, { name, pass, id }) => {
     // Error Handling
-    spinner.fail(id, { text: name + " : " + COLORS.redBright.bold("FAILED") });
+    FUNCTION.forEach((ele) => {
+      DATA[ele] = "ERROR ";
+    });
+    TABLE(DATA, FUNCTION, NAME);
     if (WrongPass.includes(id)) return;
     cluster.queue({ id: id, pass: pass, name: name });
   });
@@ -299,7 +396,6 @@ async function MINER(DATA, FUNCTION, NAME) {
   const TARGET_OUT = [];
   const CHEQUE_OUT = [];
   await cluster.task(async ({ page, data: { id, pass, name } }) => {
-    // Fetching Data
     await page.setRequestInterception(true); // Not Loading FONT and IMAGE
     page.on("request", (req) => {
       if (req.resourceType() == "font" || req.resourceType() == "image")
@@ -307,52 +403,30 @@ async function MINER(DATA, FUNCTION, NAME) {
       else req.continue();
     });
     // ---------------------- Calling Awpl Functions Accordingly ----------------------
-    await LOGIN(page, id, pass, name);
-    let paddedName = name.padEnd(longestName.length);
-    spinner.add(id, {
-      text: `┃ ${COLORS.cyan.bold(paddedName)} ┃ ${COLORS.green.bold(
-        "Logged"
-      )} ┃`,
+    FUNCTION.forEach((ele) => {
+      DATA[ele] = "LOGING";
     });
+    TABLE(DATA, FUNCTION, NAME);
+    await LOGIN(page, id, pass, name);
+    TABLE(DATA, FUNCTION, NAME);
     if (FUNCTION.includes("LEVEL")) {
-      spinner.add(id, {
-        text: `┃ ${COLORS.cyan.bold(paddedName)} ┃ ${COLORS.red.bold(
-          "LEVEL "
-        )} ┃`,
-      });
+      DATA["LEVEL"] = "LOADIN";
+      TABLE(DATA, FUNCTION, NAME);
       var data = await LEVEL(page, name, id);
-      spinner.add(id, {
-        text: `┃ ${COLORS.cyan.bold(paddedName)} ┃ ${COLORS.green.bold(
-          "LEVEL "
-        )} ┃`,
-      });
-      if (data == 0) {
-        LEVEL_OUT.push({
-          name: name,
-          level: "-",
-          remainsaosp: "-",
-          remainsgosp: "-",
-        });
-      } else {
-        LEVEL_OUT.push(data); // push data to output
-        FILE_SYSTEM.writeFileSync(
-          PATH.join(__dirname, "./json/" + NAME + " LEVEL DATA.json"),
-          JSON.stringify(LEVEL_OUT)
-        );
-      }
+      DATA["LEVEL"] = "SUCCES";
+      TABLE(DATA, FUNCTION, NAME);
+      LEVEL_OUT.push(data); // push data to output
+      FILE_SYSTEM.writeFileSync(
+        PATH.join(__dirname, "./json/" + NAME + " LEVEL DATA.json"),
+        JSON.stringify(LEVEL_OUT)
+      );
     }
     if (FUNCTION.includes("TARGET")) {
-      spinner.add(id, {
-        text: `┃ ${COLORS.cyan.bold(paddedName)} ┃ ${COLORS.red.bold(
-          "TARGET"
-        )} ┃`,
-      });
+      DATA["TARGET"] = "LOADIN";
+      TABLE(DATA, FUNCTION, NAME);
       var data = await TARGET(page, name, id);
-      spinner.add(id, {
-        text: `┃ ${COLORS.cyan.bold(paddedName)} ┃ ${COLORS.green.bold(
-          "TARGET"
-        )} ┃`,
-      });
+      DATA["LEVEL"] = "SUCCES";
+      TABLE(DATA, FUNCTION, NAME);
       TARGET_OUT.push(data); // push data to output
       FILE_SYSTEM.writeFileSync(
         PATH.join(__dirname, "./json/" + NAME + " TARGET DATA.json"),
@@ -360,31 +434,19 @@ async function MINER(DATA, FUNCTION, NAME) {
       );
     }
     if (FUNCTION.includes("CHEQUE")) {
-      spinner.add(id, {
-        text: `┃ ${COLORS.cyan.bold(paddedName)} ┃ ${COLORS.red.bold(
-          "LEVEL "
-        )} ┃`,
-      });
+      DATA["CHEQUE"] = "LOADIN";
+      TABLE(DATA, FUNCTION, NAME);
       var data = await CHEQUE(page, name, id);
-      spinner.add(id, {
-        text: `┃ ${COLORS.cyan.bold(paddedName)} ┃ ${COLORS.green.bold(
-          "CHEQUE"
-        )} ┃`,
-      });
+      DATA["LEVEL"] = "SUCCES";
+      TABLE(DATA, FUNCTION, NAME);
       CHEQUE_OUT.push(data); // push data to output
+      FILE_SYSTEM.writeFileSync(
+        PATH.join(__dirname, "./json/" + NAME + " CHEQUE DATA.json"),
+        JSON.stringify(CHEQUE_OUT)
+      );
     }
-    spinner.succeed(id, {
-      text: `┃ ${COLORS.green.bold(paddedName)} ┃ ${COLORS.green.bold(
-        "DONE "
-      )}`,
-    });
   });
   for (let i = 0; i < DATA.length; i++) {
-    // ┏┳┓┣━╋┫┗┻┛━┃
-    let paddedName = DATA[i].name.padEnd(longestName.length);
-    spinner.add(DATA[i].id, {
-      text: `┃ ${COLORS.cyan.bold(paddedName)} ┃`,
-    });
     cluster.queue(DATA[i]);
   }
   await cluster.idle(); // closing when done
@@ -396,14 +458,13 @@ async function START() {
   const func = await new MultiSelect({
     name: "function",
     message: "SELECT FUNCTION",
-    choices: ["LEVEL", "TARGET", "CHEQUE"],
+    choices: ["LEVEL ", "TARGET", "CHEQUE"],
   })
     .run()
     .then((answer) => {
       return answer;
     })
     .catch(console.error);
-
   const Users = await new MultiSelect({
     name: "function",
     message: "SELECT FUNCTION",
@@ -418,7 +479,7 @@ async function START() {
     terminator();
     spinner.add("fetch", {
       color: "yellow",
-      text: `FETCHING TEAM OF ${COLORS.yellow.bold(u)}`,
+      text: `FETCHING TEAM OF ${chalk.yellow.bold(u)}`,
     });
     try {
       const response = await axios.get(Setting.Users[u]);
@@ -432,14 +493,16 @@ async function START() {
         }
         return modifiedItem;
       });
-      await MINER(UpperCasedData, func, u);
+      spinner.remove("fetch");
+      MINER(UpperCasedData, func, u);
+      terminator();
+      process.exit(0);
     } catch (error) {
       console.error(error);
       spinner.fail("fetch", {
-        text: `FETCHING FAIL : ${COLORS.red.bold(u)}`,
+        text: `FETCHING FAIL : ${chalk.red.bold(u)}`,
       });
       process.exit(0);
-      return null;
     }
   }
 }

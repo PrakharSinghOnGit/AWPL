@@ -1,44 +1,165 @@
-const DATA = [
-  { name: "MAINPAL SINGH", id: "402A1A6", pass: "4229" },
-  { name: "HITESH JOSHI", id: "8200FBD", pass: "2014" },
-  { name: "MUKESH SANGELA", id: "BC392CB", pass: "2026" },
-  { name: "SD VYAS", id: "D556491", pass: "1312" },
-  { name: "RAJENDER VYAS", id: "77A8020", pass: "1905" },
-  { name: "HARISH SORARI", id: "A606E52", pass: "1976" },
-  { name: "RAJESH GIRI", id: "61D0679", pass: "7123" },
-  { name: "VIJAY SHANKAR", id: "3811F28", pass: "V123" },
-  { name: "DHARAMVIR", id: "BB1C650", pass: "7088" },
-  { name: "SANJAY UNIYAL", id: "2DDF976", pass: "1846" },
-  { name: "SUNIL PANT", id: "DE2B804", pass: "2482" },
-  { name: "DN PANDEY", id: "45C8BBA", pass: "9898" },
-  { name: "VINOD BISHT", id: "95CF50F", pass: "3404" },
-  { name: "MULKRAJ", id: "7D5763A", pass: "9840" },
-  { name: "RAVINDER SINGH", id: "16A677B", pass: "9735" },
-  { name: "KUSH KUMAR", id: "6D9DE5B", pass: "7867" },
-  { name: "NANDANI KUMARI", id: "DFA6AE3", pass: "2233" },
-  { name: "ANITA MODI", id: "8E6D5B9", pass: "1999" },
-  { name: "SHANKAR RATHORE", id: "E914CC7", pass: "7018" },
-  { name: "ANITA KAPRI", id: "29E0A9F", pass: "1084" },
-  { name: "GEETA DEVI", id: "D2B3162", pass: "1705" },
-  { name: "GIRISH ANDOLA", id: "BA430D7", pass: "2000" },
-  { name: "JAGDISH SARAN", id: "737B78C", pass: "3668" },
-  { name: "ANJU DASMANA", id: "96FF643", pass: "2482" },
-  { name: "JAGAT SINGH RAWAT", id: "2187C96", pass: "1506" },
-  { name: "SUSHIL PANWAR", id: "5008462", pass: "3126" },
-  { name: "BALVINDER SINGH", id: "A7C6E31", pass: "2482" },
-  { name: "DEEPANSHU", id: "0EC9985", pass: "8958" },
-  { name: "SATISH SINGH", id: "6F92A99", pass: "1035" },
-];
+const PATH = require("path");
+const SPINNIES = require("spinnies");
+const chalk = require("chalk");
+const log = (msg) => process.stdout.write(msg.toString());
+const terminator = () => console.log(chalk.dim("-=").repeat(cliWidth() / 4));
+const cliWidth = require("cli-width");
+const { MultiSelect } = require("enquirer");
+const Setting = require(PATH.join(__dirname, "./Settings.json"));
+const spinner = new SPINNIES({
+  succeedPrefix: " ",
+  failPrefix: "✖",
+});
+const axios = require("axios");
+const csv = require("csvtojson");
+let headTheme = {
+  0: function (msg) {
+    return chalk.hex("#FFFD82")(msg);
+  },
+  1: function (msg) {
+    return chalk.hex("#FF9B71")(msg);
+  },
+  2: function (msg) {
+    return chalk.hex("#1B998B")(msg);
+  },
+  3: function (msg) {
+    return chalk.hex("#8DCB87")(msg);
+  },
+  4: function (msg) {
+    return chalk.hex("#FFCC7A")(msg);
+  },
+  5: function (msg) {
+    return chalk.hex("#52528C")(msg);
+  },
+  6: function (msg) {
+    return chalk.hex("#FEE1C7")(msg);
+  },
+};
+let statusTheme = {
+  QUEUED: function (msg) {
+    return chalk.hex("#7C9EB2")(msg);
+  },
+  LOGING: function (msg) {
+    return chalk.hex("#E1AA7D")(msg);
+  },
+  LOADIN: function (msg) {
+    return chalk.hex("#52DEE5")(msg);
+  },
+  SUCCES: function (msg) {
+    return chalk.hex("#09BC8A")(msg);
+  },
+  "ERROR ": function (msg) {
+    return chalk.hex("#F40000")(msg);
+  },
+};
 
-console.table(DATA);
+function table(DATA, FUNCTION, NAME) {
+  let longestName = NAME;
+  for (let i = 0; i < DATA.length; i++) {
+    if (DATA[i].name.length > longestName.length) {
+      longestName = DATA[i].name;
+    }
+  }
+  let theads = [
+    DATA.length,
+    NAME.padEnd(longestName.length),
+    "USER ID",
+    "PASS",
+    ...FUNCTION,
+  ];
+  // ┏ ┳ ┓ ┣ ╋ ┫ ┗ ┛ ┻ ━ ┃
+  let preHeader = `┏`;
+  let header = `┃ `;
+  let postHeader = `┣`;
+  theads.forEach((ele, i) => {
+    preHeader = preHeader + "━".repeat(ele.toString().length + 2) + "┳";
+    header = header + headTheme[i](ele) + " ┃ ";
+    postHeader = postHeader + "━".repeat(ele.toString().length + 2) + "╋";
+  });
+  preHeader = preHeader.slice(0, -1) + "┓";
+  postHeader = postHeader.slice(0, -1) + "┫";
+  log(preHeader + "\n");
+  log(chalk.bold(header) + "\n");
+  log(postHeader + "\n");
+  for (let i = 0; i < DATA.length; i++) {
+    let Status = FUNCTION.map((ele) =>
+      DATA[i][ele] ? DATA[i][ele] : "QUEUED"
+    );
+    let tdata = [
+      (i + 1).toString().padStart(2),
+      DATA[i].name.padEnd(longestName.length),
+      DATA[i].id.padEnd(7),
+      DATA[i].pass.length > 4 ? DATA[i].pass.substr(0, 2) + "•➜" : DATA[i].pass,
+      ...Status,
+    ];
+    let row = `┃ `;
+    tdata.forEach((ele, i) => {
+      if (statusTheme[ele]?.call) {
+        row = row + statusTheme[ele](ele) + " ┃ ";
+        return;
+      }
+      row = row + headTheme[i](ele) + " ┃ ";
+    });
+    log(row + "\n");
+  }
+  log(
+    postHeader.replaceAll("╋", "┻").replace("┣", "┗").replace("┫", "┛") + "\n"
+  );
+}
 
-let longestName = "";
-for (let i = 0; i < DATA.length; i++) {
-  if (DATA[i].name.length > longestName.length) {
-    longestName = DATA[i].name;
+async function START() {
+  console.clear();
+  terminator();
+  const func = await new MultiSelect({
+    name: "function",
+    message: "SELECT FUNCTION",
+    choices: ["LEVEL ", "TARGET", "CHEQUE"],
+  })
+    .run()
+    .then((answer) => {
+      return answer;
+    })
+    .catch(console.error);
+  const Users = await new MultiSelect({
+    name: "function",
+    message: "SELECT FUNCTION",
+    choices: Object.keys(Setting.Users),
+  })
+    .run()
+    .then((answer) => {
+      return answer;
+    })
+    .catch(console.error);
+  for (u of Users) {
+    terminator();
+    spinner.add("fetch", {
+      color: "yellow",
+      text: `FETCHING TEAM OF ${chalk.yellow.bold(u)}`,
+    });
+    try {
+      const response = await axios.get(Setting.Users[u]);
+      const data = await csv().fromString(response.data);
+      const UpperCasedData = data.map((item) => {
+        const modifiedItem = {};
+        for (const key in item) {
+          if (Object.hasOwnProperty.call(item, key)) {
+            modifiedItem[key] = item[key].toUpperCase();
+          }
+        }
+        return modifiedItem;
+      });
+      spinner.remove("fetch");
+      table(UpperCasedData, func, u);
+      terminator();
+      process.exit(0);
+    } catch (error) {
+      console.error(error);
+      spinner.fail("fetch", {
+        text: `FETCHING FAIL : ${chalk.red.bold(u)}`,
+      });
+      process.exit(0);
+    }
   }
 }
 
-for (let i = 0; i < DATA.length; i++) {
-  console.log(DATA[i].name.padEnd(longestName.length, " ") + "│");
-}
+START();
